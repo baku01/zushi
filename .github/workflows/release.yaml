@@ -1,140 +1,172 @@
 name: Release
 
+# Publishes v<version> (from src-tauri/tauri.conf.json) when a push to main carries a version
+# that has no release yet. Bump it with `node scripts/bump-version.mjs patch` and push.
+# The app's updater reads releases/latest/download/latest.json, so the release stays a draft
+# until every asset, latest.json included, is uploaded.
+
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      publish: ${{ steps.exists.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(jq -r .version src-tauri/tauri.conf.json)
+          PKG=$(jq -r .version package.json)
+          CARGO=$(sed -n 's/^version = "\(.*\)"/\1/p' src-tauri/Cargo.toml | head -1)
+          if [ "$VERSION" != "$PKG" ] || [ "$VERSION" != "$CARGO" ]; then
+            echo "::error::Versions differ: tauri.conf.json=$VERSION package.json=$PKG Cargo.toml=$CARGO. Use scripts/bump-version.mjs."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if already released
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "$TAG is already released; bump the version to publish a new one."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: version
+    if: needs.version.outputs.publish == 'true'
     strategy:
+      fail-fast: true
       matrix:
         include:
-          - runner: macos-latest
-            target: aarch64-apple-darwin
-            label: apple-silicon
-          - runner: macos-latest
-            target: x86_64-apple-darwin
-            label: intel
-
-    runs-on: ${{ matrix.runner }}
+          - target: aarch64-apple-darwin
+            arch: arm64
+            label: aarch64
+          - target: x86_64-apple-darwin
+            arch: x86_64
+            label: x64
+    runs-on: macos-latest
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          key: ${{ matrix.target }}
 
       - name: Build mod-tools
         run: |
-          ARCH=${{ matrix.target == 'aarch64-apple-darwin' && 'arm64' || 'x86_64' }}
-          cmake -S mod-tools -B mod-tools/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=$ARCH
-          cmake --build mod-tools/build -j$(sysctl -n hw.ncpu)
+          cmake -S mod-tools -B mod-tools/build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          cmake --build mod-tools/build -j"$(sysctl -n hw.ncpu)"
+          lipo -verify_arch ${{ matrix.arch }} mod-tools/build/mod-tools
           mkdir -p src-tauri/binaries
-          cp mod-tools/build/mod-tools src-tauri/binaries/mod-tools-${{ matrix.target }}
-          chmod +x src-tauri/binaries/mod-tools-${{ matrix.target }}
+          install -m 755 mod-tools/build/mod-tools src-tauri/binaries/mod-tools-${{ matrix.target }}
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Check updater key
+      - name: Check signing key
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
-          if grep -q REPLACE_WITH_TAURI_UPDATER_PUBLIC_KEY src-tauri/tauri.conf.json || [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
-            echo "::error::Set plugins.updater.pubkey in src-tauri/tauri.conf.json and the TAURI_SIGNING_PRIVATE_KEY secret (npx tauri signer generate)."
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::Missing TAURI_SIGNING_PRIVATE_KEY secret (npx tauri signer generate), matching plugins.updater.pubkey."
             exit 1
           fi
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+      - name: Build app
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        with:
-          tauriScript: npx tauri
-          args: --target ${{ matrix.target }}
+        run: npx tauri build --target ${{ matrix.target }}
 
-      # Both targets produce Zushi.app.tar.gz, so give the updater bundle an arch-specific name.
+      # Both targets produce Zushi.app.tar.gz, so the updater bundle gets an arch-specific name.
       - name: Collect artifacts
         run: |
-          VERSION=$(jq -r .version src-tauri/tauri.conf.json)
-          ARCH=${{ matrix.target == 'aarch64-apple-darwin' && 'aarch64' || 'x64' }}
           BUNDLE=src-tauri/target/${{ matrix.target }}/release/bundle
           mkdir -p out
-          cp $BUNDLE/dmg/*.dmg out/
-          cp $BUNDLE/macos/Zushi.app.tar.gz out/Zushi_${VERSION}_${ARCH}.app.tar.gz
-          cp $BUNDLE/macos/Zushi.app.tar.gz.sig out/Zushi_${VERSION}_${ARCH}.app.tar.gz.sig
+          cp "$BUNDLE"/dmg/*.dmg out/
+          cp "$BUNDLE/macos/Zushi.app.tar.gz" "out/Zushi_${VERSION}_${{ matrix.label }}.app.tar.gz"
+          cp "$BUNDLE/macos/Zushi.app.tar.gz.sig" "out/Zushi_${VERSION}_${{ matrix.label }}.app.tar.gz.sig"
+          ls -la out
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: zushi-${{ matrix.label }}
           path: out/*
+          if-no-files-found: error
 
   release:
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.version.outputs.version }}
+      TAG: ${{ needs.version.outputs.tag }}
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
-      - name: Get version
-        id: version
-        run: echo "version=$(jq -r .version src-tauri/tauri.conf.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Tag
-        id: tag
-        run: echo "tag=v${{ steps.version.outputs.version }}-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
-
-      # The app reads releases/latest/download/latest.json to find, verify and install updates.
-      - name: Write update manifest
+      - name: Create draft release
         run: |
-          VERSION=${{ steps.version.outputs.version }}
-          BASE=https://github.com/${{ github.repository }}/releases/download/${{ steps.tag.outputs.tag }}
+          gh release create "$TAG" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Zushi v$VERSION" --generate-notes --draft \
+            artifacts/*.dmg artifacts/*.app.tar.gz
+
+      - name: Write and upload latest.json
+        run: |
+          BASE="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
+          NOTES=$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json body -q .body)
           jq -n \
             --arg version "$VERSION" \
+            --arg notes "$NOTES" \
             --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --arg arm_url "$BASE/Zushi_${VERSION}_aarch64.app.tar.gz" \
-            --arg arm_sig "$(cat artifacts/Zushi_${VERSION}_aarch64.app.tar.gz.sig)" \
+            --arg arm_sig "$(cat "artifacts/Zushi_${VERSION}_aarch64.app.tar.gz.sig")" \
             --arg x64_url "$BASE/Zushi_${VERSION}_x64.app.tar.gz" \
-            --arg x64_sig "$(cat artifacts/Zushi_${VERSION}_x64.app.tar.gz.sig)" \
-            '{version: $version, pub_date: $date, platforms: {
+            --arg x64_sig "$(cat "artifacts/Zushi_${VERSION}_x64.app.tar.gz.sig")" \
+            '{version: $version, notes: $notes, pub_date: $date, platforms: {
               "darwin-aarch64": {url: $arm_url, signature: $arm_sig},
               "darwin-x86_64": {url: $x64_url, signature: $x64_sig}
-            }}' > artifacts/latest.json
-          rm artifacts/*.sig
-          cat artifacts/latest.json
+            }}' > latest.json
+          jq 'del(.platforms[].signature)' latest.json
+          gh release upload "$TAG" latest.json -R "$GITHUB_REPOSITORY"
 
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: Zushi v${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          files: artifacts/**/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish
+        run: gh release edit "$TAG" -R "$GITHUB_REPOSITORY" --draft=false --latest

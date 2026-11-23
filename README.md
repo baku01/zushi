@@ -5,7 +5,7 @@
 <h1 align="center">Zushi</h1>
 
 <p align="center">
-  <a href="https://github.com/Mouadzz/zushi/releases/latest"><img src="https://img.shields.io/badge/download-latest-c89b3c?style=for-the-badge" alt="Download" /></a>
+  <a href="https://github.com/baku01/zushi/releases/latest"><img src="https://img.shields.io/badge/download-latest-c89b3c?style=for-the-badge" alt="Download" /></a>
 </p>
 
 <p align="center">
@@ -39,7 +39,7 @@
 
 ## Installation
 
-1. Download the latest `.dmg` for your Mac from the [Releases page](https://github.com/Mouadzz/zushi/releases/latest):
+1. Download the latest `.dmg` for your Mac from the [Releases page](https://github.com/baku01/zushi/releases/latest):
    - **Apple Silicon** (M1/M2/M3/M4/M5...) - `Zushi_x.x.x_aarch64.dmg`
    - **Intel** - `Zushi_x.x.x_x64.dmg`
 2. Open the `.dmg` and drag Zushi to your Applications folder
@@ -59,6 +59,21 @@ After that, Zushi updates itself: when a new version is out, click **Update & re
 4. **Start your game** - With the patcher showing **Waiting for game**, queue up and play.
 
 > **Important:** Apply the skin before champion select ends (use the default skin in client) so it is locked in when the game starts. If it does not apply, close the game, reopen League, run Zushi again, apply, and reconnect.
+
+## Releasing
+
+Every push and pull request runs CI (`.github/workflows/ci.yaml`: frontend build, mod-tools for both architectures, `cargo test`).
+
+To publish a version, bump it and push to `main`:
+
+```
+node scripts/bump-version.mjs patch   # or minor, major, or an explicit x.y.z
+git commit -am "chore: release v0.1.19" && git push
+```
+
+`.github/workflows/release.yaml` builds both architectures, signs the updater bundles and publishes `v<version>` with a `latest.json`, which installed apps pick up through **Update & restart**. Pushes that keep the same version don't release anything.
+
+The workflow needs the `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` secrets, matching `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`. Losing that key means installed apps can no longer verify updates.
 
 ## Disclaimer
 

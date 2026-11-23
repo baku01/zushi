@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { checkForUpdate, installUpdate } from "../lib/commands";
 
-const GITHUB_REPO = "Mouadzz/zushi";
+// Must match plugins.updater.endpoints in src-tauri/tauri.conf.json.
+const GITHUB_REPO = "baku01/zushi";
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases`;
 const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+const RECHECK_MS = 6 * 60 * 60 * 1000;
 
 function compareVersions(current: string, latest: string): number {
   const a = current.split(".").map(Number);
@@ -24,7 +26,7 @@ async function latestReleaseVersion(): Promise<string | null> {
   if (!res.ok) return null;
   const data = await res.json();
   const tagName: string = data.tag_name ?? "";
-  // Tag format: "v0.1.0-85" → extract "0.1.0"
+  // Tag format: "v0.1.18" (older releases: "v0.1.0-85") → extract "0.1.0"
   const remote = tagName.replace(/^v/, "").split("-")[0];
   return remote && compareVersions(currentVersion, remote) > 0 ? remote : null;
 }
@@ -37,7 +39,7 @@ export function useVersionCheck() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
+    const check = async () => {
       try {
         const update = await checkForUpdate();
         if (update) {
@@ -58,7 +60,11 @@ export function useVersionCheck() {
       } catch {
         // silently ignore
       }
-    })();
+    };
+    void check();
+    // Zushi tends to stay open for days, so look again now and then.
+    const timer = setInterval(() => void check(), RECHECK_MS);
+    return () => clearInterval(timer);
   }, []);
 
   // On success the app relaunches into the new version, so this only returns on failure.

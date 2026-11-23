@@ -1,0 +1,64 @@
+name: CI
+
+# Builds and tests every push and pull request: frontend (tsc + vite), mod-tools for both
+# architectures, and the Rust app (cargo test). Releasing is release.yaml's job.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: npm ci
+
+      # tsc --noEmit && vite build; the Rust build embeds dist/, so this comes first.
+      - name: Frontend
+        run: npm run build
+
+      - name: mod-tools (arm64 + x86_64)
+        run: |
+          for ARCH in arm64 x86_64; do
+            cmake -S mod-tools -B mod-tools/build-$ARCH -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+            cmake --build mod-tools/build-$ARCH -j"$(sysctl -n hw.ncpu)"
+            lipo -verify_arch $ARCH mod-tools/build-$ARCH/mod-tools
+          done
+          mkdir -p src-tauri/binaries
+          install -m 755 mod-tools/build-arm64/mod-tools src-tauri/binaries/mod-tools-aarch64-apple-darwin
+          install -m 755 mod-tools/build-x86_64/mod-tools src-tauri/binaries/mod-tools-x86_64-apple-darwin
+
+      - name: Rust tests
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      - name: Versions in sync
+        run: |
+          VERSION=$(jq -r .version src-tauri/tauri.conf.json)
+          [ "$VERSION" = "$(jq -r .version package.json)" ] || { echo "::error::package.json version differs from tauri.conf.json"; exit 1; }
+          grep -q "^version = \"$VERSION\"" src-tauri/Cargo.toml || { echo "::error::Cargo.toml version differs from tauri.conf.json"; exit 1; }
