@@ -47,7 +47,7 @@ jobs:
             cmake -S mod-tools -B mod-tools/build-$ARCH -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_POLICY_VERSION_MINIMUM=3.5
             cmake --build mod-tools/build-$ARCH -j"$(sysctl -n hw.ncpu)"
-            lipo -verify_arch $ARCH mod-tools/build-$ARCH/mod-tools
+            lipo mod-tools/build-$ARCH/mod-tools -verify_arch $ARCH
           done
           mkdir -p src-tauri/binaries
           install -m 755 mod-tools/build-arm64/mod-tools src-tauri/binaries/mod-tools-aarch64-apple-darwin

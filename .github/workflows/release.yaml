@@ -92,7 +92,7 @@ jobs:
           cmake -S mod-tools -B mod-tools/build -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_POLICY_VERSION_MINIMUM=3.5
           cmake --build mod-tools/build -j"$(sysctl -n hw.ncpu)"
-          lipo -verify_arch ${{ matrix.arch }} mod-tools/build/mod-tools
+          lipo mod-tools/build/mod-tools -verify_arch ${{ matrix.arch }}
           mkdir -p src-tauri/binaries
           install -m 755 mod-tools/build/mod-tools src-tauri/binaries/mod-tools-${{ matrix.target }}
 
