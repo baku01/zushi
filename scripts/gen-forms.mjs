@@ -68,7 +68,12 @@ const CLASSES = ["Assassin", "Fighter", "Mage", "Marksman", "Support", "Tank"];
 
 async function get(url, as = "json") {
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(url, { headers: { "User-Agent": "zushi-gen-forms" } });
+    const headers = { "User-Agent": "zushi-gen-forms" };
+    // Anonymous API calls from shared CI runners hit GitHub's rate limit (403).
+    if (process.env.GITHUB_TOKEN && url.startsWith("https://api.github.com/")) {
+      headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    }
+    const res = await fetch(url, { headers });
     if (res.ok) {
       if (as === "json") return res.json();
       if (as === "text") return res.text();

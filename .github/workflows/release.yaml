@@ -101,6 +101,8 @@ jobs:
       # Refresh the skin form names from Riot's and LeagueSkins' data; on failure
       # the committed src/data/forms.json is used.
       - name: Refresh form names
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/gen-forms.mjs || echo "::warning::gen-forms failed, using the committed forms.json"
 
       - name: Check signing key
