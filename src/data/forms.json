@@ -1,0 +1,213 @@
+{
+  "18079": {
+    "base": {
+      "en": "Risen Legend",
+      "pt": "Lenda Ascendida"
+    },
+    "forms": {
+      "18080": {
+        "en": "Immortalized Legend",
+        "pt": "Lenda Imortalizada"
+      }
+    }
+  },
+  "21016": {
+    "base": {
+      "en": "Scarlet Fair",
+      "pt": null
+    },
+    "forms": {
+      "21997": {
+        "en": "Zero Hour",
+        "pt": null
+      },
+      "21998": {
+        "en": "Royal Arms",
+        "pt": null
+      },
+      "21999": {
+        "en": "Starswarm",
+        "pt": null
+      }
+    }
+  },
+  "25080": {
+    "base": null,
+    "forms": {
+      "25999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "37006": {
+    "base": null,
+    "forms": {
+      "37998": {
+        "en": null,
+        "pt": null
+      },
+      "37999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "82054": {
+    "base": null,
+    "forms": {
+      "82998": {
+        "en": null,
+        "pt": null
+      },
+      "82999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "99007": {
+    "base": null,
+    "forms": {
+      "99991": {
+        "en": "Air",
+        "pt": "Ar"
+      },
+      "99992": {
+        "en": "Dark",
+        "pt": "Trevas"
+      },
+      "99993": {
+        "en": "Ice",
+        "pt": "Gelo"
+      },
+      "99994": {
+        "en": "Magma",
+        "pt": "Magma"
+      },
+      "99995": {
+        "en": "Mystic",
+        "pt": "Mística"
+      },
+      "99996": {
+        "en": "Nature",
+        "pt": "Natureza"
+      },
+      "99997": {
+        "en": "Storm",
+        "pt": "Tempestade"
+      },
+      "99998": {
+        "en": "Water",
+        "pt": "Água"
+      },
+      "99999": {
+        "en": "Fire",
+        "pt": "Fogo"
+      }
+    }
+  },
+  "103085": {
+    "base": {
+      "en": "Risen Legend",
+      "pt": "Lenda Ascendida"
+    },
+    "forms": {
+      "103086": {
+        "en": "Immortalized Legend",
+        "pt": "Lenda Imortalizada"
+      },
+      "103087": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "145070": {
+    "base": {
+      "en": "Risen Legend",
+      "pt": "Lenda Ascendida"
+    },
+    "forms": {
+      "145071": {
+        "en": "Immortalized Legend",
+        "pt": "Lenda Imortalizada"
+      },
+      "145999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "147001": {
+    "base": {
+      "en": "Indie",
+      "pt": "Indie"
+    },
+    "forms": {
+      "147002": {
+        "en": "Rising Star",
+        "pt": "Rumo ao Estrelato"
+      },
+      "147003": {
+        "en": "Superstar",
+        "pt": "Superstar"
+      }
+    }
+  },
+  "222060": {
+    "base": null,
+    "forms": {
+      "222998": {
+        "en": null,
+        "pt": null
+      },
+      "222999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "234043": {
+    "base": null,
+    "forms": {
+      "234994": {
+        "en": null,
+        "pt": null
+      },
+      "234995": {
+        "en": null,
+        "pt": null
+      },
+      "234996": {
+        "en": null,
+        "pt": null
+      },
+      "234997": {
+        "en": null,
+        "pt": null
+      },
+      "234998": {
+        "en": null,
+        "pt": null
+      },
+      "234999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  },
+  "875066": {
+    "base": null,
+    "forms": {
+      "875998": {
+        "en": null,
+        "pt": null
+      },
+      "875999": {
+        "en": null,
+        "pt": null
+      }
+    }
+  }
+}

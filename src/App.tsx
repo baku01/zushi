@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
@@ -9,7 +9,14 @@ import { useDownloads } from "./hooks/useDownloads";
 import { useSkinUpdates } from "./hooks/useSkinUpdates";
 import { useCustoms } from "./hooks/useCustoms";
 import { ensureChampions } from "./hooks/useChampions";
-import { ensureSkinIds, ensureRepoZips, ensureChromaInfo } from "./hooks/useSkinData";
+import {
+  ensureSkinIds,
+  ensureRepoZips,
+  ensureChromaInfo,
+  ensureLocalizedSkinNames,
+} from "./hooks/useSkinData";
+import { useI18n, onLangChange, type Key } from "./lib/i18n";
+import type { SkinType } from "./hooks/useSkinData";
 import { useVersionCheck } from "./hooks/useVersionCheck";
 import StatusBar from "./components/StatusBar";
 import DownloadBar from "./components/DownloadBar";
@@ -26,14 +33,15 @@ import logo from "./assets/icon.png";
 
 type View = "champions" | "my-skins" | "customs" | "settings";
 
-const NAV_ITEMS: { id: View; label: string; icon: typeof Swords }[] = [
-  { id: "champions", label: "Champions", icon: Swords },
-  { id: "my-skins", label: "My Skins", icon: Layers },
-  { id: "customs", label: "Customs", icon: Package },
-  { id: "settings", label: "Settings", icon: SettingsIcon },
+const NAV_ITEMS: { id: View; label: Key; icon: typeof Swords }[] = [
+  { id: "champions", label: "nav.champions", icon: Swords },
+  { id: "my-skins", label: "nav.mySkins", icon: Layers },
+  { id: "customs", label: "nav.customs", icon: Package },
+  { id: "settings", label: "nav.settings", icon: SettingsIcon },
 ];
 
 function App() {
+  const { t } = useI18n();
   const { gamePath, detectedPath, status, selectPath, confirmSetup, checkPath } = useGamePath();
   const patcher = usePatcher();
   const dl = useDownloads();
@@ -42,6 +50,8 @@ function App() {
   const update = useVersionCheck();
   const [view, setView] = useState<View>("champions");
   const [selectedChampion, setSelectedChampion] = useState<Champion | null>(null);
+  // Shared by the champion grid and a champion's skins, so a type picked on one carries over.
+  const [skinType, setSkinType] = useState<SkinType | null>(null);
   const [skinSelection, setSkinSelection] = useState<Record<string, string>>(() => {
     try {
       const raw = localStorage.getItem("zushi_skin_selection");
@@ -76,6 +86,16 @@ function App() {
     ensureChromaInfo().catch(() => {});
   }, []);
 
+  // pt_BR skin names are display-only: load them when (and only if) Portuguese is picked.
+  useEffect(
+    () =>
+      onLangChange((lang) => {
+        document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+        if (lang === "pt") void ensureLocalizedSkinNames();
+      }),
+    []
+  );
+
   // Surface patcher errors as toast
   useEffect(() => {
     if (patcher.error) setToastMessage(patcher.error);
@@ -108,6 +128,13 @@ function App() {
   }, [skinSelection]);
 
   const skinCount = Object.keys(skinSelection).length;
+
+  const ownedCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const d of dl.downloads) counts.set(d.champion_name, (counts.get(d.champion_name) ?? 0) + 1);
+    return counts;
+  }, [dl.downloads]);
+  const selectedChampions = useMemo(() => new Set(Object.keys(skinSelection)), [skinSelection]);
 
   function renderContent() {
     if (view === "settings") {
@@ -164,24 +191,38 @@ function App() {
           downloading={dl.downloading}
           onDownload={dl.download}
           onDownloadAll={dl.downloadMultiple}
+          skinType={skinType}
+          onSkinTypeChange={setSkinType}
         />
       );
     }
 
-    return <ChampionGrid onSelect={setSelectedChampion} />;
+    return (
+      <ChampionGrid
+        onSelect={setSelectedChampion}
+        ownedCounts={ownedCounts}
+        selectedChampions={selectedChampions}
+        skinType={skinType}
+        onSkinTypeChange={setSkinType}
+      />
+    );
   }
 
   return (
-    <div className="bg-charcoal-400 relative flex h-screen">
-      <aside className="border-border flex w-50 shrink-0 flex-col border-r">
-        <div className="flex items-end gap-2.5 px-4 py-4 select-none">
-          <img src={logo} alt="Zushi" className="h-9 w-9" />
-          <span className="font-logo text-gold-400 text-4xl leading-6 uppercase">Zushi</span>
+    <div className="relative flex h-screen">
+      {/* Transparent: the window's sidebar vibrancy shows through. The top strip clears
+          the traffic lights of the overlay title bar and drags the window. */}
+      <aside className="flex w-52 shrink-0 flex-col">
+        <div data-tauri-drag-region className="h-9 shrink-0" />
+        <div data-tauri-drag-region className="flex items-center gap-2.5 px-4 pb-3 select-none">
+          <img src={logo} alt="Zushi" className="h-9 w-9 drop-shadow-[0_2px_8px_rgba(200,170,110,0.25)]" />
+          {/* Line height must fit the glyphs: the gradient (bg-clip-text) only paints the line box. */}
+          <span className="font-logo from-gold-200 to-gold-500 bg-linear-to-b bg-clip-text pt-1 text-4xl leading-[1.15] text-transparent uppercase">
+            Zushi
+          </span>
         </div>
 
-        <div className="border-border mx-3 border-b" />
-
-        <nav className="flex flex-col gap-1 p-3 select-none">
+        <nav className="flex flex-col gap-0.5 px-2.5 py-2 select-none">
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
             const active = view === id;
             return (
@@ -189,18 +230,25 @@ function App() {
                 key={id}
                 onClick={() => handleNavClick(id)}
                 className={[
-                  "flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-charcoal-200 text-gold-400"
-                    : "text-ink-muted hover:text-ink hover:bg-charcoal-300",
+                  "flex cursor-default items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
+                  active ? "bg-white/10 text-ink font-medium" : "text-ink/85 hover:bg-white/5",
                 ].join(" ")}
               >
-                <Icon size={16} strokeWidth={1.5} />
-                {label}
+                <Icon
+                  size={16}
+                  strokeWidth={active ? 2 : 1.75}
+                  className={active ? "text-gold-400" : "text-gold-400/70"}
+                />
+                {t(label)}
+                {id === "my-skins" && skinUpdates.outdated.length === 0 && dl.downloads.length > 0 && (
+                  <span className="text-ink-muted ml-auto text-[11px] tabular-nums">
+                    {dl.downloads.length}
+                  </span>
+                )}
                 {id === "my-skins" && skinUpdates.outdated.length > 0 && (
                   <span
                     className="bg-gold-400/15 text-gold-400 ml-auto rounded-full px-1.5 text-[10px] leading-4 font-medium tabular-nums"
-                    title={`${skinUpdates.outdated.length} skin update(s) available`}
+                    title={t("nav.updates", { n: skinUpdates.outdated.length })}
                   >
                     {skinUpdates.outdated.length}
                   </span>
@@ -215,7 +263,7 @@ function App() {
             onClick={() =>
               invoke("open_url", { url: "https://github.com/Mouadzz/zushi" }).catch(() => {})
             }
-            className="text-ink-muted hover:text-gold-400 mx-2 mb-2 flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-2 text-sm transition-colors"
+            className="text-ink-secondary hover:text-ink mx-2.5 mb-1 flex w-[calc(100%-1.25rem)] cursor-default items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors hover:bg-white/5"
           >
             <Star
               size={16}
@@ -223,7 +271,7 @@ function App() {
               fill="currentColor"
               className="text-gold-400 shrink-0"
             />
-            <span className="whitespace-nowrap">Star Zushi on GitHub</span>
+            <span className="truncate">{t("sidebar.star")}</span>
           </button>
 
           {update.updateAvailable && update.latestVersion ? (
@@ -243,7 +291,7 @@ function App() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="bg-charcoal-400 flex min-w-0 flex-1 flex-col border-l border-black/50 shadow-[-1px_0_0_rgba(255,255,255,0.04)]">
         <main className="flex flex-1 flex-col overflow-hidden">{renderContent()}</main>
 
         <DownloadBar downloading={dl.downloading} />

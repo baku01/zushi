@@ -1,6 +1,6 @@
 {
   "name": "zushi",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,6 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
     "@fontsource/rajdhani": "^5.2.7",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-autostart": "^2.5.1",

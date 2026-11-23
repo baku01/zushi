@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Upload, X, Check, FileArchive, Package } from "lucide-react";
+import { useI18n } from "../lib/i18n";
 import type { CustomMod } from "../types";
 
 interface CustomsProps {
@@ -19,6 +20,7 @@ export default function Customs({
   onRemove,
   onToggle,
 }: CustomsProps) {
+  const { t } = useI18n();
   const [draggingOver, setDraggingOver] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -89,11 +91,13 @@ export default function Customs({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-border flex shrink-0 items-center border-b px-4 py-3">
+      <div data-tauri-drag-region className="border-border flex shrink-0 items-center border-b px-4 py-3">
         <span className="text-ink-muted text-sm tabular-nums select-none">
-          {customs.length} {customs.length === 1 ? "custom" : "customs"}
+          {t("customs.count", { n: customs.length })}
           {activeCount > 0 && (
-            <span className="text-gold-400 ml-1.5 font-medium">{activeCount} active</span>
+            <span className="text-gold-400 ml-1.5 font-medium">
+              {t("customs.active", { n: activeCount })}
+            </span>
           )}
         </span>
       </div>
@@ -118,12 +122,12 @@ export default function Customs({
           className={`text-sm font-medium ${draggingOver && !patcherActive ? "text-gold-400" : "text-ink-secondary"}`}
         >
           {patcherActive
-            ? "Stop the patcher to add mods"
+            ? t("customs.stopFirst")
             : adding
-              ? `Adding ${adding}...`
-              : "Drop mods here"}
+              ? t("customs.adding", { name: adding })
+              : t("customs.drop")}
         </p>
-        {!patcherActive && <p className="text-ink-muted text-xs">or click to browse</p>}
+        {!patcherActive && <p className="text-ink-muted text-xs">{t("customs.browse")}</p>}
       </div>
 
       {error && (
@@ -135,7 +139,7 @@ export default function Customs({
           <div className="bg-charcoal-300 flex h-12 w-12 items-center justify-center rounded-full">
             <Package size={20} strokeWidth={1.5} className="text-ink-muted" />
           </div>
-          <p className="text-ink-secondary text-sm">No custom mods yet</p>
+          <p className="text-ink-secondary text-sm">{t("customs.none")}</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto p-4">
@@ -183,7 +187,7 @@ export default function Customs({
                   <button
                     onClick={() => onRemove(custom.name)}
                     className="bg-charcoal-500 hover:bg-error text-ink-muted absolute top-1.5 left-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full shadow transition-colors hover:text-white"
-                    title="Remove"
+                    title={t("customs.remove")}
                   >
                     <X size={10} strokeWidth={2.5} />
                   </button>

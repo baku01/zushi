@@ -98,6 +98,11 @@ jobs:
 
       - run: npm ci
 
+      # Refresh the skin form names from Riot's and LeagueSkins' data; on failure
+      # the committed src/data/forms.json is used.
+      - name: Refresh form names
+        run: node scripts/gen-forms.mjs || echo "::warning::gen-forms failed, using the committed forms.json"
+
       - name: Check signing key
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

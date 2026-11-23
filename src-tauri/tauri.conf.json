@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Zushi",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "identifier": "com.zushi.app",
   "build": {
     "frontendDist": "../dist",
@@ -19,10 +19,18 @@
         "maximizable": false,
         "center": true,
         "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "transparent": true,
+        "windowEffects": {
+          "effects": ["sidebar"],
+          "state": "followsWindowActiveState"
+        },
         "visible": false,
         "focus": true
       }
     ],
+    "macOSPrivateApi": true,
     "security": {
       "csp": null
     }

@@ -1,32 +1,34 @@
 import { Loader2 } from "lucide-react";
+import { useI18n } from "../lib/i18n";
 
 interface DownloadBarProps {
   downloading: string | null;
 }
 
 export default function DownloadBar({ downloading }: DownloadBarProps) {
+  const { t } = useI18n();
   if (!downloading) return null;
 
   let label: string;
   let progress: { current: number; total: number } | null = null;
 
   if (downloading === "batch") {
-    label = "Preparing downloads...";
+    label = t("download.preparing");
   } else {
     // Batch progress arrives as "Skin Name (3/10)".
     const match = downloading.match(/^(.*) \((\d+)\/(\d+)\)$/);
     if (match) {
-      label = `Downloading ${match[1]}`;
+      label = t("download.item", { name: match[1] });
       progress = { current: Number(match[2]), total: Number(match[3]) };
     } else {
-      label = `Downloading ${downloading.split("/").pop()}...`;
+      label = `${t("download.item", { name: downloading.split("/").pop() ?? "" })}...`;
     }
   }
 
   const pct = progress ? Math.round((progress.current / progress.total) * 100) : null;
 
   return (
-    <div className="border-border bg-charcoal-600 relative flex items-center gap-3 border-t px-4 py-2">
+    <div className="border-border bg-charcoal-500/85 relative flex items-center gap-3 border-t px-4 py-2 backdrop-blur">
       <Loader2 size={14} className="text-gold-400 shrink-0 animate-spin" />
       <span className="text-ink truncate text-sm font-medium">{label}</span>
       {progress && (

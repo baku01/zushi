@@ -1,7 +1,28 @@
 import { useState } from "react";
-import { ArrowLeft, Download, Check, Loader2 } from "lucide-react";
-import { useSkinData, skinDownloadUrl, isSkinAvailable, getSplashNum } from "../hooks/useSkinData";
-import { splashUrl, championAvatar } from "../hooks/useChampions";
+import ArtImage from "./ArtImage";
+import { ArrowLeft, Download, Check, Loader2, Info } from "lucide-react";
+import {
+  useSkinData,
+  skinDownloadUrl,
+  isSkinAvailable,
+  getSplashNum,
+  skinDisplayName,
+  formLabel,
+  baseFormLabelOf,
+  skinSplashUrlById,
+  skinIsType,
+  SKIN_TYPES,
+  type SkinType,
+} from "../hooks/useSkinData";
+import {
+  splashUrl,
+  championAvatar,
+  championDisplayName,
+  championTitle,
+} from "../hooks/useChampions";
+import { useI18n, t as translate, type Key } from "../lib/i18n";
+import RarityBadge from "./RarityBadge";
+import SkinTypeChips from "./SkinTypeChips";
 import type { Champion, Skin, Chroma, SkinGroup } from "../types";
 
 interface ChampionDetailProps {
@@ -11,94 +32,154 @@ interface ChampionDetailProps {
   downloading: string | null;
   onDownload: (url: string, championName: string, skinName: string) => void;
   onDownloadAll: (items: { url: string; championName: string; skinName: string }[]) => void;
+  skinType: SkinType | null;
+  onSkinTypeChange: (type: SkinType | null) => void;
 }
 
+type SkinState = {
+  downloaded: boolean;
+  isDownloading: boolean;
+  available: boolean;
+  url: string | null;
+};
+
 function SkinSplash({ skin }: { skin: Skin }) {
+  const { t } = useI18n();
   const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const num = getSplashNum(skin);
 
   if (failed) {
     return (
       <div className="bg-charcoal-600 flex h-full w-full items-center justify-center">
-        <span className="text-ink-muted text-[10px] select-none">No preview</span>
+        <span className="text-ink-muted text-[10px] select-none">{t("detail.noPreview")}</span>
       </div>
     );
   }
 
   return (
-    <>
-      {!loaded && (
-        <div className="from-charcoal-600 via-charcoal-400 to-charcoal-600 animate-shimmer absolute inset-0 bg-linear-to-r bg-size-[200%_100%]" />
-      )}
-      <img
-        src={splashUrl(skin.championId, num)}
-        alt={skin.name}
-        className={[
-          "h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-105",
-          loaded ? "opacity-100" : "opacity-0",
-        ].join(" ")}
-        loading="lazy"
-        draggable={false}
-        onLoad={() => setLoaded(true)}
-        onError={() => setFailed(true)}
-      />
-    </>
+    <ArtImage
+      srcs={[skinSplashUrlById(skin.id), splashUrl(skin.championId, getSplashNum(skin))]}
+      alt={skin.name}
+      className="h-full w-full object-cover object-[center_30%] group-hover:scale-[1.04]"
+      onFail={() => setFailed(true)}
+    />
   );
+}
+
+// Plain `t`: called during render by components that already subscribe via useI18n.
+function variantTitle(name: string, s: SkinState): string {
+  if (s.downloaded) return translate("detail.variantDownloaded", { name });
+  if (!s.available) return translate("detail.variantMissing", { name });
+  return translate("detail.variantDownload", { name });
 }
 
 function ChromaSwatch({
   chroma,
-  available,
+  state,
+  disabled,
+  onDownload,
 }: {
   chroma: Chroma;
-  available: boolean;
+  state: SkinState;
+  disabled: boolean;
+  onDownload: () => void;
 }) {
   const [c1, c2] = chroma.colors;
-  const bg = !c1
-    ? undefined
-    : c2
-      ? `linear-gradient(135deg, ${c1} 0% 50%, ${c2} 50% 100%)`
-      : c1;
+  const bg = !c1 ? undefined : c2 ? `linear-gradient(135deg, ${c1} 0% 50%, ${c2} 50% 100%)` : c1;
+  const clickable = state.available && !state.downloaded && !disabled;
 
   return (
-    <div
-      title={`${chroma.name}${!available ? " (not available)" : ""}`}
+    <button
+      onClick={clickable ? onDownload : undefined}
+      disabled={!clickable}
+      title={variantTitle(skinDisplayName(chroma), state)}
       className={[
-        "h-5 w-5 shrink-0 rounded-sm ring-1 transition-all",
-        available
-          ? "ring-charcoal-50/30"
-          : "ring-charcoal-50/10 opacity-30",
+        "relative h-5 w-5 shrink-0 rounded-sm transition-all",
+        state.downloaded
+          ? "ring-success/80 ring-offset-charcoal-500 ring-2 ring-offset-1"
+          : state.available
+            ? "ring-charcoal-50/30 ring-1"
+            : "ring-charcoal-50/10 opacity-30 ring-1",
+        clickable ? "hover:ring-gold-400 cursor-pointer hover:scale-110" : "cursor-default",
       ].join(" ")}
-      style={{ background: bg ?? "var(--color-charcoal-400, #2a2a2a)" }}
-    />
+      style={{ background: bg ?? "var(--color-charcoal-200)" }}
+    >
+      {state.isDownloading && (
+        <Loader2
+          size={11}
+          className="absolute inset-0 m-auto animate-spin text-white drop-shadow"
+        />
+      )}
+    </button>
+  );
+}
+
+function FormPill({
+  label,
+  fullName,
+  state,
+  disabled,
+  onDownload,
+}: {
+  label: string;
+  fullName: string;
+  state: SkinState;
+  disabled: boolean;
+  onDownload: () => void;
+}) {
+  const clickable = state.available && !state.downloaded && !disabled;
+  return (
+    <button
+      onClick={clickable ? onDownload : undefined}
+      disabled={!clickable}
+      title={variantTitle(fullName, state)}
+      className={[
+        "flex h-5 items-center gap-1 rounded-sm border px-1.5 text-[10px] leading-none transition-colors",
+        state.downloaded
+          ? "border-success/40 bg-success/10 text-success"
+          : state.available
+            ? "border-charcoal-50/30 text-ink-secondary"
+            : "border-charcoal-50/10 text-ink-muted opacity-40",
+        clickable ? "hover:border-gold-400 hover:text-gold-300 cursor-pointer" : "cursor-default",
+      ].join(" ")}
+    >
+      {state.isDownloading ? (
+        <Loader2 size={9} className="animate-spin" />
+      ) : state.downloaded ? (
+        <Check size={9} strokeWidth={3} />
+      ) : null}
+      {label}
+    </button>
   );
 }
 
 function SkinCard({
   group,
-  downloadKeyState,
+  stateOf,
   busy,
   onDownloadGroup,
+  onDownloadOne,
 }: {
   group: SkinGroup;
-  downloadKeyState: (skin: Skin) => {
-    downloaded: boolean;
-    isDownloading: boolean;
-    available: boolean;
-    url: string | null;
-  };
+  stateOf: (skin: Skin) => SkinState;
   busy: boolean;
   onDownloadGroup: (group: SkinGroup) => void;
+  onDownloadOne: (skin: Skin) => void;
 }) {
-  const baseState = downloadKeyState(group.base);
+  const { t } = useI18n();
+  const baseState = stateOf(group.base);
+  const variants: Skin[] = [group.base, ...group.chromas, ...group.forms];
+  const states = variants.map(stateOf);
+  const allDownloaded = states.every((s) => s.downloaded || !s.available);
+  const anyDownloading = states.some((s) => s.isDownloading);
+  const downloadedCount = states.filter((s) => s.downloaded).length;
+  const name = skinDisplayName(group.base);
 
   return (
     <div
       className={[
-        "group bg-charcoal-500 relative overflow-hidden rounded border transition-colors",
+        "group bg-charcoal-500 relative flex flex-col overflow-hidden rounded-md border transition-colors",
         baseState.available
-          ? "border-charcoal-50/20 hover:border-gold-400/60"
+          ? "border-charcoal-50/20 hover:border-gold-400/50"
           : "border-charcoal-50/10 opacity-50",
       ].join(" ")}
     >
@@ -106,22 +187,22 @@ function SkinCard({
         <SkinSplash skin={group.base} />
 
         <div className="absolute top-2 right-2 z-10">
-          {baseState.downloaded ? (
+          {anyDownloading ? (
+            <span className="bg-gold-400/90 flex h-7 w-7 items-center justify-center rounded-full shadow-lg">
+              <Loader2 size={14} strokeWidth={2} className="text-charcoal-600 animate-spin" />
+            </span>
+          ) : allDownloaded && downloadedCount > 0 ? (
             <span className="bg-success/90 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 shadow-lg">
               <Check size={14} strokeWidth={2.5} className="text-white" />
-            </span>
-          ) : baseState.isDownloading ? (
-            <span className="bg-gold-400/90 flex h-7 w-7 items-center justify-center rounded-full shadow-lg">
-              <Loader2 size={14} strokeWidth={2} className="animate-spin text-white" />
             </span>
           ) : baseState.available && !busy ? (
             <button
               onClick={() => onDownloadGroup(group)}
-              className="bg-charcoal-600/80 hover:bg-gold-400 hover:text-charcoal-600 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-white opacity-0 shadow-lg transition-colors group-hover:opacity-100"
+              className="bg-charcoal-600/75 hover:bg-gold-400 hover:text-charcoal-600 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white shadow-lg backdrop-blur-sm transition-colors"
               title={
-                group.chromas.length > 0
-                  ? `Download skin and ${group.chromas.length} chroma${group.chromas.length === 1 ? "" : "s"}`
-                  : "Download"
+                variants.length > 1
+                  ? `${t("detail.downloadGroup")} (${variants.length})`
+                  : t("detail.download")
               }
             >
               <Download size={14} strokeWidth={2} />
@@ -129,23 +210,70 @@ function SkinCard({
           ) : null}
         </div>
 
+        {downloadedCount > 0 && !allDownloaded && (
+          <span className="bg-charcoal-600/80 text-success absolute top-2 left-2 rounded-full px-1.5 text-[10px] leading-5 font-medium tabular-nums backdrop-blur-sm">
+            {downloadedCount}/{variants.length}
+          </span>
+        )}
+
         {!baseState.available && (
           <div className="bg-charcoal-600/60 absolute inset-0 flex items-center justify-center">
             <span className="text-[10px] font-medium tracking-wide text-white/60 uppercase select-none">
-              Not available
+              {t("detail.notAvailable")}
             </span>
           </div>
         )}
       </div>
 
-      <div className="px-3 py-2">
-        <p className="text-ink line-clamp-2 text-xs leading-snug">{group.base.name}</p>
+      <div className="flex flex-1 flex-col gap-1.5 px-3 pt-2 pb-2.5">
+        <p className="text-ink line-clamp-2 text-xs leading-snug font-medium" title={name}>
+          {name}
+        </p>
+        <RarityBadge skinId={group.base.id} />
+
+        {group.forms.length > 0 && (
+          <div className="mt-0.5 flex flex-col gap-1">
+            <span className="text-gold-400/80 text-[9.5px] font-semibold tracking-wider uppercase select-none">
+              {t("detail.forms")}
+            </span>
+            <div className="flex flex-wrap gap-1">
+              <FormPill
+                label={baseFormLabelOf(group.base.id)}
+                fullName={name}
+                state={baseState}
+                disabled={busy}
+                onDownload={() => onDownloadOne(group.base)}
+              />
+              {group.forms.map((f) => (
+                <FormPill
+                  key={f.id}
+                  label={formLabel(f)}
+                  fullName={skinDisplayName(f)}
+                  state={stateOf(f)}
+                  disabled={busy}
+                  onDownload={() => onDownloadOne(f)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {group.chromas.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-1">
-            {group.chromas.map((chroma) => {
-              const cs = downloadKeyState(chroma);
-              return <ChromaSwatch key={chroma.id} chroma={chroma} available={cs.available} />;
-            })}
+          <div className="mt-0.5 flex flex-col gap-1">
+            <span className="text-ink-muted text-[9.5px] font-semibold tracking-wider uppercase select-none">
+              {t("detail.chromas")}
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {group.chromas.map((chroma) => (
+                <ChromaSwatch
+                  key={chroma.id}
+                  chroma={chroma}
+                  state={stateOf(chroma)}
+                  disabled={busy}
+                  onDownload={() => onDownloadOne(chroma)}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -160,117 +288,189 @@ export default function ChampionDetail({
   downloading,
   onDownload,
   onDownloadAll,
+  skinType,
+  onSkinTypeChange,
 }: ChampionDetailProps) {
+  const { t } = useI18n();
   const { skins, groups, loading, error } = useSkinData(champion);
+
+  const typeCounts = new Map<SkinType, number>();
+  for (const g of groups) {
+    for (const type of SKIN_TYPES) {
+      if (skinIsType(g.base.id, type, g.forms.length > 0)) {
+        typeCounts.set(type, (typeCounts.get(type) ?? 0) + 1);
+      }
+    }
+  }
+  // A type picked on the champion grid may not exist for this champion: show all then.
+  const activeType = skinType && typeCounts.has(skinType) ? skinType : null;
+  const visibleGroups = activeType
+    ? groups.filter((g) => skinIsType(g.base.id, activeType, g.forms.length > 0))
+    : groups;
 
   const busy = downloading !== null;
   const notDownloaded = skins.filter(
     (s) => !isDownloaded(s.championName, s.name) && isSkinAvailable(s)
   );
+  const downloadedCount = skins.filter((s) => isDownloaded(s.championName, s.name)).length;
   const allDownloaded = notDownloaded.length === 0 && skins.length > 0;
+  const hasForms = groups.some((g) => g.forms.length > 0);
 
-  const downloadKeyState = (skin: Skin) => {
-    const dlKey = `${skin.championName}/${skin.name}`;
-    return {
-      downloaded: isDownloaded(skin.championName, skin.name),
-      isDownloading: downloading === dlKey,
-      available: isSkinAvailable(skin),
-      url: skinDownloadUrl(skin),
-    };
-  };
+  const stateOf = (skin: Skin): SkinState => ({
+    downloaded: isDownloaded(skin.championName, skin.name),
+    isDownloading: downloading === `${skin.championName}/${skin.name}`,
+    available: isSkinAvailable(skin),
+    url: skinDownloadUrl(skin),
+  });
 
-  const handleDownloadAll = () => {
+  const toItems = (list: Skin[]) => {
     const items: { url: string; championName: string; skinName: string }[] = [];
-    for (const s of notDownloaded) {
-      const url = skinDownloadUrl(s);
-      if (url) {
-        items.push({ url, championName: s.championName, skinName: s.name });
-      }
-    }
-    if (items.length > 0) onDownloadAll(items);
-  };
-
-  const handleDownloadGroup = (group: SkinGroup) => {
-    const items: { url: string; championName: string; skinName: string }[] = [];
-    const candidates: Skin[] = [group.base, ...group.chromas];
-    for (const s of candidates) {
+    for (const s of list) {
       if (isDownloaded(s.championName, s.name)) continue;
       const url = skinDownloadUrl(s);
-      if (!url) continue;
-      items.push({ url, championName: s.championName, skinName: s.name });
+      if (url) items.push({ url, championName: s.championName, skinName: s.name });
     }
-    if (items.length === 1) {
-      onDownload(items[0].url, items[0].championName, items[0].skinName);
-    } else if (items.length > 1) {
-      onDownloadAll(items);
-    }
+    return items;
   };
+
+  const download = (list: Skin[]) => {
+    const items = toItems(list);
+    if (items.length === 1) onDownload(items[0].url, items[0].championName, items[0].skinName);
+    else if (items.length > 1) onDownloadAll(items);
+  };
+
+  const name = championDisplayName(champion);
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-border flex shrink-0 items-center gap-3 border-b px-4 py-2.5">
+      <div
+        data-tauri-drag-region
+        className="border-border relative flex shrink-0 items-center gap-3 overflow-hidden border-b px-4 py-3"
+      >
+        {/* Faint splash of the default skin behind the header */}
+        <img
+          src={
+            skinSplashUrlById(String(parseInt(champion.key, 10) * 1000)) ??
+            splashUrl(champion.id, 0)
+          }
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_25%] opacity-[0.14]"
+          draggable={false}
+        />
+        <div className="from-charcoal-400 via-charcoal-400/80 pointer-events-none absolute inset-0 bg-linear-to-r to-transparent" />
+
         <button
           onClick={onBack}
-          className="hover:bg-charcoal-200 text-ink-muted hover:text-ink -ml-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition-colors"
+          title={t("detail.back")}
+          className="hover:bg-charcoal-200 text-ink-muted hover:text-ink relative -ml-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition-colors"
         >
           <ArrowLeft size={20} strokeWidth={1.5} />
         </button>
 
         <img
           src={championAvatar(champion.id)}
-          alt={champion.name}
-          className="h-7 w-7 rounded-sm"
+          alt={name}
+          className="border-gold-400/40 relative h-10 w-10 rounded-sm border"
           draggable={false}
         />
 
-        <div className="flex min-w-0 items-baseline gap-2">
-          <span className="text-ink truncate text-sm font-medium">{champion.name}</span>
-          <span className="text-ink-muted hidden truncate text-xs sm:inline">{champion.title}</span>
+        <div className="relative flex min-w-0 flex-col">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <span className="text-ink truncate text-base font-semibold">{name}</span>
+            <span className="text-ink-muted truncate text-xs">{championTitle(champion)}</span>
+          </div>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            {champion.tags.map((tag) => (
+              <span
+                key={tag}
+                className="bg-charcoal-200/80 text-ink-secondary rounded-sm px-1.5 text-[10px] leading-4"
+              >
+                {t(`tag.${tag}` as Key)}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-3">
+        <div className="relative ml-auto flex shrink-0 items-center gap-3">
           {!loading && (
             <span className="text-ink-muted text-[11px] tabular-nums select-none">
-              {groups.length} {groups.length === 1 ? "skin" : "skins"}
+              {t("detail.skins", { n: groups.length })}
+              {downloadedCount > 0 && (
+                <span className="text-success">
+                  {" "}
+                  · {t("detail.downloaded", { n: downloadedCount })}
+                </span>
+              )}
             </span>
           )}
 
           {!loading && skins.length > 0 && !allDownloaded && (
             <button
-              onClick={handleDownloadAll}
+              onClick={() => download(notDownloaded)}
               disabled={busy}
-              className="bg-gold-400 text-charcoal-600 hover:bg-gold-300 flex cursor-pointer items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-40"
+              className="btn-gold flex cursor-pointer items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors disabled:pointer-events-none disabled:opacity-40"
             >
               <Download size={13} strokeWidth={2} />
-              Download All
+              {t("detail.downloadAll")}
             </button>
           )}
         </div>
       </div>
 
+      {!loading && groups.length > 0 && typeCounts.size > 0 && (
+        <div className="border-border shrink-0 border-b px-4 py-2">
+          <SkinTypeChips
+            value={activeType}
+            onChange={onSkinTypeChange}
+            allLabel={t("detail.allSkins")}
+            counts={typeCounts}
+            total={groups.length}
+          />
+        </div>
+      )}
+
+      {hasForms && !loading && (!activeType || activeType === "forms") && (
+        <div className="bg-gold-400/8 border-gold-400/15 mx-4 mt-3 flex items-start gap-2.5 rounded-lg border px-3 py-2">
+          <Info size={14} strokeWidth={1.5} className="text-gold-400 mt-0.5 shrink-0" />
+          <p className="text-ink-secondary text-xs leading-relaxed">{t("detail.formsHint")}</p>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto p-4">
         {loading ? (
-          <div className="flex h-32 items-center justify-center">
-            <span className="text-ink-muted text-sm">Loading skins...</span>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
+            {Array.from({ length: 8 }, (_, i) => (
+              <div
+                key={i}
+                className="bg-charcoal-500 border-charcoal-50/10 overflow-hidden rounded-md border"
+              >
+                <div className="from-charcoal-600 via-charcoal-400 to-charcoal-600 animate-shimmer aspect-video bg-linear-to-r bg-size-[200%_100%]" />
+                <div className="space-y-2 px-3 py-3">
+                  <div className="bg-charcoal-300 h-2.5 w-3/4 rounded-sm" />
+                  <div className="bg-charcoal-300 h-2 w-1/3 rounded-sm" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="flex h-32 flex-col items-center justify-center gap-1">
-            <span className="text-error text-sm">Failed to load skin data</span>
+            <span className="text-error text-sm">{t("detail.failed")}</span>
             <span className="text-ink-muted text-xs">{error}</span>
           </div>
         ) : groups.length === 0 ? (
           <div className="flex h-32 items-center justify-center">
-            <span className="text-ink-muted text-sm">No skins available</span>
+            <span className="text-ink-muted text-sm">{t("detail.none")}</span>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-3">
-            {groups.map((group) => (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
+            {visibleGroups.map((group) => (
               <SkinCard
                 key={group.base.id}
                 group={group}
-                downloadKeyState={downloadKeyState}
+                stateOf={stateOf}
                 busy={busy}
-                onDownloadGroup={handleDownloadGroup}
+                onDownloadGroup={(g) => download([g.base, ...g.chromas, ...g.forms])}
+                onDownloadOne={(s) => download([s])}
               />
             ))}
           </div>

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Power, FolderOpen, Trash2, Loader2, HardDrive } from "lucide-react";
+import { Power, FolderOpen, Trash2, Loader2, HardDrive, Languages } from "lucide-react";
+import { useI18n, type Lang } from "../lib/i18n";
 import { getSkinsDirSize, getWorkDirSize, getCustomsDirSize, clearAllSkins, clearWorkDir, clearAllCustoms } from "../lib/commands";
 import Toast from "./Toast";
 
@@ -27,6 +28,7 @@ export default function Settings({
   onSkinsCleared,
   onCustomsCleared,
 }: SettingsProps) {
+  const { t, lang, setLang } = useI18n();
   const [autoStart, setAutoStart] = useState(false);
   const [autoStartLoading, setAutoStartLoading] = useState(true);
   const [pathLoading, setPathLoading] = useState(false);
@@ -87,16 +89,16 @@ export default function Settings({
     try {
       const selected = await open({
         multiple: false,
-        title: "Select League of Legends app",
+        title: t("settings.pickGame"),
       });
       if (selected) {
         const valid = await onPathChange(selected as string);
         if (!valid) {
-          setPathError("Invalid game path: LeagueofLegends.app not found");
+          setPathError(t("settings.invalidPath"));
         }
       }
     } catch {
-      setPathError("Failed to open file dialog.");
+      setPathError(t("settings.dialogFailed"));
     } finally {
       setPathLoading(false);
     }
@@ -131,24 +133,22 @@ export default function Settings({
   const totalSize = skinsSize + workSize + customsSize;
 
   return (
-    <div className="h-full w-full overflow-y-auto p-5">
+    <div className="mx-auto w-full max-w-3xl px-5 py-5">
       {/* General */}
       <div className="pb-2">
         <span className="text-ink-muted text-[11px] font-medium tracking-wider uppercase select-none">
-          General
+          {t("settings.general")}
         </span>
       </div>
 
-      <div className="border-border divide-border divide-y rounded-lg border">
+      <div className="border-border divide-border bg-charcoal-500 divide-y rounded-lg border">
         {/* Auto-start */}
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-3">
             <Power size={16} strokeWidth={1.5} className="text-ink-muted" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-ink text-sm">Launch at login</span>
-              <span className="text-ink-muted text-xs">
-                Start Zushi automatically when you log in
-              </span>
+              <span className="text-ink text-sm">{t("settings.autostart")}</span>
+              <span className="text-ink-muted text-xs">{t("settings.autostartHint")}</span>
             </div>
           </div>
           <button
@@ -158,7 +158,7 @@ export default function Settings({
             className={[
               "relative h-6 w-10 shrink-0 cursor-pointer rounded-full transition-colors duration-200",
               "focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
-              autoStart ? "bg-gold-400" : "bg-charcoal-100",
+              autoStart ? "bg-success" : "bg-charcoal-100",
             ].join(" ")}
           >
             <span
@@ -170,14 +170,47 @@ export default function Settings({
           </button>
         </div>
 
+        {/* Language */}
+        <div className="flex items-center justify-between px-4 py-3.5">
+          <div className="flex items-center gap-3">
+            <Languages size={16} strokeWidth={1.5} className="text-ink-muted" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-ink text-sm">{t("settings.language")}</span>
+              <span className="text-ink-muted text-xs">{t("settings.languageHint")}</span>
+            </div>
+          </div>
+          <div className="bg-charcoal-500 border-border flex shrink-0 rounded-md border p-0.5">
+            {(
+              [
+                ["pt", "Português (BR)"],
+                ["en", "English"],
+              ] as [Lang, string][]
+            ).map(([code, label]) => (
+              <button
+                key={code}
+                onClick={() => setLang(code)}
+                aria-pressed={lang === code}
+                className={[
+                  "cursor-pointer rounded px-3 py-1 text-xs transition-colors",
+                  lang === code
+                    ? "bg-gold-400 text-charcoal-600 font-medium"
+                    : "text-ink-secondary hover:text-ink",
+                ].join(" ")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Game path */}
         <div className="flex items-center justify-between gap-4 px-4 py-3.5">
           <div className="flex min-w-0 items-center gap-3">
             <FolderOpen size={16} strokeWidth={1.5} className="text-ink-muted shrink-0" />
             <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-ink text-sm">Game path</span>
+              <span className="text-ink text-sm">{t("settings.gamePath")}</span>
               <span className="text-ink-muted truncate font-mono text-xs">
-                {gamePath ?? "Not set"}
+                {gamePath ?? t("settings.notSet")}
               </span>
             </div>
           </div>
@@ -186,7 +219,7 @@ export default function Settings({
             disabled={pathLoading}
             className="border-border text-ink-secondary hover:border-gold-400 hover:text-gold-400 shrink-0 cursor-pointer rounded-md border px-3.5 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {pathLoading ? "Validating..." : "Change"}
+            {pathLoading ? t("settings.validating") : t("settings.change")}
           </button>
         </div>
       </div>
@@ -194,25 +227,25 @@ export default function Settings({
       {/* Storage */}
       <div className="mt-6 pb-2">
         <span className="text-ink-muted text-[11px] font-medium tracking-wider uppercase select-none">
-          Storage
+          {t("settings.storage")}
         </span>
       </div>
 
       {/* Total usage */}
-      <div className="border-border mb-3 flex items-center gap-3 rounded-lg border px-4 py-3.5">
+      <div className="border-border bg-charcoal-500 mb-3 flex items-center gap-3 rounded-lg border px-4 py-3.5">
         <HardDrive size={16} strokeWidth={1.5} className="text-ink-muted shrink-0" />
-        <span className="text-ink flex-1 text-sm">Total usage</span>
+        <span className="text-ink flex-1 text-sm">{t("settings.total")}</span>
         <span className="text-ink text-sm font-medium tabular-nums">
           {cacheLoading ? "..." : formatSize(totalSize)}
         </span>
       </div>
 
-      <div className="border-border divide-border divide-y rounded-lg border">
+      <div className="border-border divide-border bg-charcoal-500 divide-y rounded-lg border">
         {/* Skins & custom mods */}
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="text-ink text-sm">Skins &amp; Custom Mods</span>
-            <span className="text-ink-muted text-xs">Downloaded skins and imported mods</span>
+            <span className="text-ink text-sm">{t("settings.content")}</span>
+            <span className="text-ink-muted text-xs">{t("settings.contentHint")}</span>
           </div>
           <div className="flex shrink-0 items-center gap-4">
             <span className="text-ink-secondary min-w-16 text-right text-sm tabular-nums">
@@ -228,7 +261,7 @@ export default function Settings({
               ) : (
                 <Trash2 size={13} strokeWidth={1.5} />
               )}
-              Clear
+              {t("settings.clear")}
             </button>
           </div>
         </div>
@@ -236,8 +269,8 @@ export default function Settings({
         {/* Patcher data */}
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <span className="text-ink text-sm">Patcher Data</span>
-            <span className="text-ink-muted text-xs">Temporary overlay files, rebuilt on apply</span>
+            <span className="text-ink text-sm">{t("settings.work")}</span>
+            <span className="text-ink-muted text-xs">{t("settings.workHint")}</span>
           </div>
           <div className="flex shrink-0 items-center gap-4">
             <span className="text-ink-secondary min-w-16 text-right text-sm tabular-nums">
@@ -253,14 +286,14 @@ export default function Settings({
               ) : (
                 <Trash2 size={13} strokeWidth={1.5} />
               )}
-              Clear
+              {t("settings.clear")}
             </button>
           </div>
         </div>
       </div>
 
       {patcherActive && (
-        <p className="text-ink-muted mt-2 px-1 text-xs">Stop the patcher before clearing data.</p>
+        <p className="text-ink-muted mt-2 px-1 text-xs">{t("settings.stopFirst")}</p>
       )}
 
       {pathError && <Toast message={pathError} onClose={() => setPathError(null)} />}

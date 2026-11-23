@@ -18,6 +18,8 @@ export interface Champion {
   name: string;   // "Aatrox"
   title: string;  // "the Darkin Blade"
   tags: string[]; // ["Fighter", "Tank"]
+  namePt?: string; // "Aatrox" - pt_BR name, when loaded
+  titlePt?: string; // "a Espada Darkin"
 }
 
 export interface Skin {
@@ -33,10 +35,29 @@ export interface Chroma extends Skin {
   colors: string[];
 }
 
+// A form of a skin whose look changes in game (see lib/forms.ts), published as
+// its own package. `name` is the English "Base Skin (Form)" used on disk.
+export interface FormSkin extends Skin {
+  parentId: string;
+  formEn: string;
+  formPt: string;
+}
+
 export interface SkinGroup {
   base: Skin;
   chromas: Chroma[];
+  forms: FormSkin[];
 }
+
+export type Rarity =
+  | "kNoRarity"
+  | "kRare"
+  | "kEpic"
+  | "kLegendary"
+  | "kMythic"
+  | "kUltimate"
+  | "kExalted"
+  | "kTranscendent";
 
 export interface DownloadedSkin {
   champion_name: string;

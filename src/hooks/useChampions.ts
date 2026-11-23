@@ -1,12 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import type { Champion } from "../types";
 import { getCached, setCache } from "../lib/cache";
+import { getLang, fold, useI18n } from "../lib/i18n";
 
 // Fallback when the version lookup fails; updated to the live latest at runtime.
 const FALLBACK_VERSION = "16.12.1";
 const VERSIONS_URL = "https://ddragon.leagueoflegends.com/api/versions.json";
 
-const CACHE_KEY = "zushi:champions_v3";
+// _v4 adds the pt_BR names and titles.
+const CACHE_KEY = "zushi:champions_v4";
 const VERSION_CACHE_KEY = "zushi:ddragon_version";
 
 let ddragonVersion = FALLBACK_VERSION;
@@ -54,12 +56,18 @@ export function ensureChampions(): Promise<Champion[]> {
       return cached;
     }
 
-    return fetch(`https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/en_US/champion.json`)
+    const url = (locale: string) =>
+      `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/data/${locale}/champion.json`;
+    // pt_BR is optional: without it the English names are shown.
+    const pt = fetch(url("pt_BR"))
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null);
+    return fetch(url("en_US"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+        return Promise.all([res.json(), pt]);
       })
-      .then((json) => {
+      .then(([json, ptJson]) => {
         const list: Champion[] = Object.values(json.data)
           // Skip Riot's "Classic"/Jade duplicate champions. They mirror real
           // champions but have no skins in the repo. No API flag marks them, so
@@ -71,6 +79,8 @@ export function ensureChampions(): Promise<Champion[]> {
             name: c.name,
             title: c.title,
             tags: c.tags,
+            namePt: ptJson?.data?.[c.id]?.name,
+            titlePt: ptJson?.data?.[c.id]?.title,
           }));
         list.sort((a, b) => a.name.localeCompare(b.name));
         championsCache = list;
@@ -84,7 +94,16 @@ export function findChampionByName(name: string): Champion | undefined {
   return championsCache?.find((c) => c.name === name);
 }
 
+export function championDisplayName(c: Champion): string {
+  return getLang() === "pt" ? (c.namePt ?? c.name) : c.name;
+}
+
+export function championTitle(c: Champion): string {
+  return getLang() === "pt" ? (c.titlePt ?? c.title) : c.title;
+}
+
 export function useChampions() {
+  const { lang } = useI18n();
   const [champions, setChampions] = useState<Champion[]>(championsCache ?? []);
   const [loading, setLoading] = useState(!championsCache);
   const [error, setError] = useState<string | null>(null);
@@ -100,10 +119,15 @@ export function useChampions() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return champions;
-    const q = search.toLowerCase();
-    return champions.filter((c) => c.name.toLowerCase().includes(q));
-  }, [champions, search]);
+    const q = fold(search.trim());
+    const list = champions.filter(
+      (c) =>
+        !q || fold(c.name).includes(q) || (c.namePt !== undefined && fold(c.namePt).includes(q))
+    );
+    return [...list].sort((a, b) =>
+      championDisplayName(a).localeCompare(championDisplayName(b), lang === "pt" ? "pt-BR" : "en")
+    );
+  }, [champions, search, lang]);
 
   return {
     champions: filtered,

@@ -4,6 +4,7 @@ import { FolderOpen, Check, AlertCircle, Loader2 } from "lucide-react";
 import type { AppStatus } from "../types";
 import logo from "../assets/icon.png";
 import Toast from "./Toast";
+import { useI18n } from "../lib/i18n";
 
 interface GamePathSelectorProps {
   onConfirm: (path: string) => Promise<boolean>;
@@ -20,6 +21,7 @@ export default function GamePathSelector({
   detectedPath,
   status,
 }: GamePathSelectorProps) {
+  const { t } = useI18n();
   const [validatedPath, setValidatedPath] = useState<string | null>(detectedPath);
   const [displayPath, setDisplayPath] = useState<string | null>(detectedPath);
   const [pathValid, setPathValid] = useState<boolean | null>(detectedPath ? true : null);
@@ -42,7 +44,7 @@ export default function GamePathSelector({
     try {
       const selected = await open({
         multiple: false,
-        title: "Select your League of Legends game path",
+        title: t("setup.dialogTitle"),
       });
 
       if (selected) {
@@ -55,11 +57,11 @@ export default function GamePathSelector({
         } else {
           setValidatedPath(null);
           setPathValid(false);
-          setToastMsg("Invalid game path: LeagueofLegends.app not found");
+          setToastMsg(t("settings.invalidPath"));
         }
       }
     } catch {
-      setToastMsg("Failed to open file dialog.");
+      setToastMsg(t("settings.dialogFailed"));
     } finally {
       setLoading(false);
     }
@@ -73,10 +75,10 @@ export default function GamePathSelector({
       const valid = await handler(validatedPath);
       if (!valid) {
         setPathValid(false);
-        setToastMsg("Invalid game path: LeagueofLegends.app not found");
+        setToastMsg(t("settings.invalidPath"));
       }
     } catch {
-      setToastMsg("Something went wrong while validating the path.");
+      setToastMsg(t("setup.error"));
     } finally {
       setLoading(false);
     }
@@ -89,12 +91,12 @@ export default function GamePathSelector({
 
         <div>
           <h1 className="text-ink text-lg font-medium">
-            {isSetup ? "Welcome to Zushi" : "League of Legends not found"}
+            {isSetup ? t("setup.welcome") : t("setup.notFound")}
           </h1>
           <p className="text-ink-secondary mt-1.5 text-sm leading-relaxed">
             {isSetup && detectedPath
-              ? "We detected your League of Legends installation."
-              : "Select your League of Legends game path to get started."}
+              ? t("setup.detected")
+              : t("setup.select")}
           </p>
         </div>
 
@@ -137,15 +139,15 @@ export default function GamePathSelector({
             <button
               onClick={handleContinue}
               disabled={loading}
-              className="bg-gold-400 text-charcoal-600 hover:bg-gold-300 w-full cursor-pointer rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-gold w-full cursor-pointer rounded-md px-5 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 size={14} className="animate-spin" />
-                  Validating...
+                  {t("setup.validating")}
                 </span>
               ) : (
-                "Continue"
+                t("setup.continue")
               )}
             </button>
           )}
@@ -162,10 +164,10 @@ export default function GamePathSelector({
             ].join(" ")}
           >
             {(() => {
-              if (loading && !(displayPath && pathValid === true)) return "Validating...";
-              if (displayPath && pathValid === true) return "Wrong path? Change it";
-              if (pathValid === false) return "Select another path";
-              return "Browse...";
+              if (loading && !(displayPath && pathValid === true)) return t("setup.validating");
+              if (displayPath && pathValid === true) return t("setup.change");
+              if (pathValid === false) return t("setup.another");
+              return t("setup.browse");
             })()}
           </button>
         </div>

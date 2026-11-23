@@ -9,33 +9,38 @@
 }
 
 @theme {
-  --color-charcoal-50: #3a3a42;
-  --color-charcoal-100: #2d2d35;
-  --color-charcoal-200: #252530;
-  --color-charcoal-300: #1e1e28;
-  --color-charcoal-400: #181820;
-  --color-charcoal-500: #121218;
-  --color-charcoal-600: #0a0a10;
+  /* macOS dark graphite. 400 is the window, 500 raised surfaces (cards, fields,
+     grouped rows), 600 image wells; 300-50 are hover/control fills and lines. */
+  --color-charcoal-50: #55555d;
+  --color-charcoal-100: #424248;
+  --color-charcoal-200: #36363c;
+  --color-charcoal-300: #2d2d32;
+  --color-charcoal-400: #1d1d20;
+  --color-charcoal-500: #262629;
+  --color-charcoal-600: #151517;
 
-  --color-gold-100: #fdf0c4;
-  --color-gold-200: #f5d77a;
-  --color-gold-300: #e8c44a;
-  --color-gold-400: #c89b3c;
-  --color-gold-500: #a17a2e;
-  --color-gold-600: #7a5c22;
+  /* League client gold, the app's accent */
+  --color-gold-100: #f0e6d2;
+  --color-gold-200: #ead6a6;
+  --color-gold-300: #dcc28a;
+  --color-gold-400: #c8aa6e;
+  --color-gold-500: #a3854a;
+  --color-gold-600: #785a28;
 
-  --color-ink: #e8e6e3;
-  --color-ink-secondary: #9e9e9e;
-  --color-ink-muted: #6b6b6b;
+  --color-hextech: #0ac8b9;
+
+  --color-ink: #ececf0;
+  --color-ink-secondary: #a3a3ab;
+  --color-ink-muted: #6f6f78;
 
   --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-accent: #c89b3c;
+  --color-border-accent: #c8aa6e;
 
-  --color-success: #2ecc71;
-  --color-error: #e74c3c;
-  --color-warning: #f39c12;
+  --color-success: #32d74b;
+  --color-error: #ff453a;
+  --color-warning: #ff9f0a;
 
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   --font-logo: "JungleAdventurer", system-ui, sans-serif;
 
   --animate-shimmer: shimmer 2.5s ease-in-out infinite;
@@ -62,15 +67,30 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #181820;
-  color: #e8e6e3;
+  /* Transparent so the sidebar shows the window's vibrancy (see tauri.conf.json). */
+  background-color: transparent;
+  color: #ececf0;
   font-family:
-    "Inter",
-    system-ui,
     -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "Helvetica Neue",
+    system-ui,
     sans-serif;
   -webkit-font-smoothing: antialiased;
   user-select: none;
+}
+
+/* Gold primary button */
+.btn-gold {
+  background: linear-gradient(180deg, #e3cb93 0%, #c8aa6e 55%, #a98a4f 100%);
+  color: #10131b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+}
+.btn-gold:hover {
+  filter: brightness(1.08);
 }
 
 /* Thin scrollbar matching the dark theme */
@@ -83,10 +103,10 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.24);
 }
