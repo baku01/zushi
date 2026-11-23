@@ -42,6 +42,7 @@ export interface DownloadedSkin {
   champion_name: string;
   skin_name: string;
   zip_path: string;
+  blob_sha: string | null; // git blob sha of the zip, compared with the repo tree's
 }
 
 export interface CustomEntry {

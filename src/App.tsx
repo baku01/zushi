@@ -6,6 +6,7 @@ import { Swords, Layers, Package, Settings as SettingsIcon, Star } from "lucide-
 import { useGamePath } from "./hooks/useGamePath";
 import { usePatcher } from "./hooks/usePatcher";
 import { useDownloads } from "./hooks/useDownloads";
+import { useSkinUpdates } from "./hooks/useSkinUpdates";
 import { useCustoms } from "./hooks/useCustoms";
 import { ensureChampions } from "./hooks/useChampions";
 import { ensureSkinIds, ensureRepoZips, ensureChromaInfo } from "./hooks/useSkinData";
@@ -36,6 +37,7 @@ function App() {
   const { gamePath, detectedPath, status, selectPath, confirmSetup, checkPath } = useGamePath();
   const patcher = usePatcher();
   const dl = useDownloads();
+  const skinUpdates = useSkinUpdates(dl.downloads, dl.downloadMultiple);
   const customs = useCustoms();
   const update = useVersionCheck();
   const [view, setView] = useState<View>("champions");
@@ -145,6 +147,10 @@ function App() {
           selection={skinSelection}
           onSelectionChange={setSkinSelection}
           onDelete={dl.deleteSkin}
+          outdatedKeys={skinUpdates.outdatedKeys}
+          updateCount={skinUpdates.outdated.length}
+          updating={skinUpdates.updating || dl.downloading !== null}
+          onUpdateAll={skinUpdates.updateAll}
         />
       );
     }
@@ -191,6 +197,14 @@ function App() {
               >
                 <Icon size={16} strokeWidth={1.5} />
                 {label}
+                {id === "my-skins" && skinUpdates.outdated.length > 0 && (
+                  <span
+                    className="bg-gold-400/15 text-gold-400 ml-auto rounded-full px-1.5 text-[10px] leading-4 font-medium tabular-nums"
+                    title={`${skinUpdates.outdated.length} skin update(s) available`}
+                  >
+                    {skinUpdates.outdated.length}
+                  </span>
+                )}
               </button>
             );
           })}

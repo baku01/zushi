@@ -40,6 +40,9 @@ pub struct DownloadedSkin {
     pub champion_name: String,
     pub skin_name: String,
     pub zip_path: String,
+    /// Git blob SHA-1 of the zip, comparable to the `sha` the GitHub tree API
+    /// lists for the repo file, so a skin republished upstream can be spotted.
+    pub blob_sha: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

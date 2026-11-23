@@ -10,18 +10,24 @@ const SKINS_JSON_URL =
   "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json";
 
 const SKIN_IDS_CACHE_KEY = "zushi:skin_ids";
-// _v2 invalidates the stale name-based cache from older builds.
-const REPO_ZIPS_CACHE_KEY = "zushi:repo_files_v2";
+// _v2 invalidated the stale name-based cache from older builds; _v3 adds each
+// file's git blob sha, used to spot skins republished upstream.
+const REPO_ZIPS_CACHE_KEY = "zushi:repo_files_v3";
 const CHROMAS_CACHE_KEY = "zushi:chromas";
 
 let skinIdsCache: Record<string, string> | null = null;
 let repoZipsCache: Map<string, string> | null = null;
+// skin id -> git blob sha of its package in the repo tree
+let repoShaCache: Map<string, string> | null = null;
+let repoZipsInflight: Promise<Map<string, string>> | null = null;
 let chromaInfoCache: Map<number, { colors: string[]; parentId: number }> | null = null;
 
 // Reverse indices over skinIdsCache so name-based lookups are O(1) instead of
 // scanning all ~9k entries on every call (My Skins does this per skin, per render).
 let skinNameToId: Map<string, string> | null = null;
 let skinChampNameToId: Map<string, string> | null = null;
+// base skin name ("Jax", the local champion folder name) -> champion key
+let champNameToKey: Map<string, number> | null = null;
 let indexedFrom: Record<string, string> | null = null;
 
 function ensureSkinIndexes(): void {
@@ -29,14 +35,18 @@ function ensureSkinIndexes(): void {
   if (indexedFrom === skinIdsCache && skinNameToId) return;
   const nameToId = new Map<string, string>();
   const champNameToId = new Map<string, string>();
+  const champToKey = new Map<string, number>();
   for (const [id, name] of Object.entries(skinIdsCache)) {
     if (!nameToId.has(name)) nameToId.set(name, id);
-    const champKey = Math.floor(parseInt(id, 10) / 1000);
+    const numericId = parseInt(id, 10);
+    const champKey = Math.floor(numericId / 1000);
     const key = `${champKey}:${name}`;
     if (!champNameToId.has(key)) champNameToId.set(key, id);
+    if (numericId % 1000 === 0 && !champToKey.has(name)) champToKey.set(name, champKey);
   }
   skinNameToId = nameToId;
   skinChampNameToId = champNameToId;
+  champNameToKey = champToKey;
   indexedFrom = skinIdsCache;
 }
 
@@ -69,22 +79,41 @@ export function ensureSkinIds(): Promise<Record<string, string>> {
     });
 }
 
-export function ensureRepoZips(): Promise<Map<string, string>> {
-  if (repoZipsCache) return Promise.resolve(repoZipsCache);
+type RepoFileRow = [id: string, path: string, sha: string];
 
-  const cached = getCached<[string, string][]>(REPO_ZIPS_CACHE_KEY);
-  if (cached) {
-    repoZipsCache = new Map(cached);
-    return Promise.resolve(repoZipsCache);
+function loadRepoRows(rows: RepoFileRow[]): Map<string, string> {
+  const paths = new Map<string, string>();
+  const shas = new Map<string, string>();
+  for (const [id, path, sha] of rows) {
+    paths.set(id, path);
+    if (sha) shas.set(id, sha);
+  }
+  repoZipsCache = paths;
+  repoShaCache = shas;
+  return paths;
+}
+
+/**
+ * Loads the repo tree (cached for 24h). `force` skips the cache, e.g. right
+ * before updating skins so their new content is compared against fresh shas.
+ */
+export function ensureRepoZips(force = false): Promise<Map<string, string>> {
+  if (!force && repoZipsCache) return Promise.resolve(repoZipsCache);
+
+  if (!force) {
+    const cached = getCached<RepoFileRow[]>(REPO_ZIPS_CACHE_KEY);
+    if (cached) return Promise.resolve(loadRepoRows(cached));
   }
 
-  return fetch(TREE_API_URL)
+  if (repoZipsInflight) return repoZipsInflight;
+
+  repoZipsInflight = fetch(TREE_API_URL)
     .then((res) => {
       if (!res.ok) throw new Error(`GitHub API ${res.status}`);
       return res.json();
     })
-    .then((data: { tree: { path: string; type: string }[] }) => {
-      const map = new Map<string, string>();
+    .then((data: { tree: { path: string; type: string; sha: string }[] }) => {
+      const rows: RepoFileRow[] = [];
       for (const entry of data.tree) {
         if (entry.type !== "blob" || !entry.path.startsWith("skins/")) continue;
         // Paths are id-based, e.g. "skins/222/222020/222025/222025.fantome".
@@ -98,20 +127,53 @@ export function ensureRepoZips(): Promise<Map<string, string>> {
         if (!ext) continue;
         const skinId = filename.slice(0, -ext.length);
         if (!/^\d+$/.test(skinId)) continue;
-        map.set(skinId, entry.path);
+        rows.push([skinId, entry.path, entry.sha ?? ""]);
       }
-      repoZipsCache = map;
-      setCache(REPO_ZIPS_CACHE_KEY, [...map.entries()]);
-      return map;
+      setCache(REPO_ZIPS_CACHE_KEY, rows);
+      return loadRepoRows(rows);
     })
     .catch((err) => {
-      const stale = getStale<[string, string][]>(REPO_ZIPS_CACHE_KEY);
-      if (stale) {
-        repoZipsCache = new Map(stale);
-        return repoZipsCache;
-      }
+      if (repoZipsCache) return repoZipsCache; // forced refresh failed: keep what we have
+      const stale = getStale<RepoFileRow[]>(REPO_ZIPS_CACHE_KEY);
+      if (stale) return loadRepoRows(stale);
       throw err;
+    })
+    .finally(() => {
+      repoZipsInflight = null;
     });
+  return repoZipsInflight;
+}
+
+/** Git blob sha of the skin's package in the repo, or null if unknown. */
+export function repoSkinSha(skinId: string): string | null {
+  return repoShaCache?.get(skinId) ?? null;
+}
+
+/**
+ * The skin id of a downloaded skin, from its on-disk champion folder name (the
+ * base skin's name in skin_ids.json, e.g. "Jax") and skin name.
+ */
+export function lookupDownloadedSkinId(championName: string, skinName: string): string | null {
+  if (!skinIdsCache) return null;
+  ensureSkinIndexes();
+  const champKey = champNameToKey!.get(championName);
+  if (champKey !== undefined) {
+    const id = skinChampNameToId!.get(`${champKey}:${skinName}`);
+    if (id !== undefined) return id;
+  }
+  return skinNameToId!.get(skinName) ?? null;
+}
+
+/** Download URL of a skin by id (see skinDownloadUrl). */
+export function skinDownloadUrlById(skinId: string): string | null {
+  if (!repoZipsCache) return null;
+  const repoPath = repoZipsCache.get(skinId);
+  if (!repoPath) return null;
+  const encoded = repoPath
+    .split("/")
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+  return `https://raw.githubusercontent.com/Alban1911/LeagueSkins/main/${encoded}`;
 }
 
 export function ensureChromaInfo(): Promise<Map<number, { colors: string[]; parentId: number }>> {
@@ -292,16 +354,7 @@ export function lookupSplashNum(skinName: string): number | null {
  * Returns null if the skin doesn't exist in the repo.
  */
 export function skinDownloadUrl(skin: Skin): string | null {
-  if (!repoZipsCache) return null;
-
-  const repoPath = repoZipsCache.get(skin.id);
-  if (!repoPath) return null;
-
-  const encoded = repoPath
-    .split("/")
-    .map((seg) => encodeURIComponent(seg))
-    .join("/");
-  return `https://raw.githubusercontent.com/Alban1911/LeagueSkins/main/${encoded}`;
+  return skinDownloadUrlById(skin.id);
 }
 
 export function isSkinAvailable(skin: Skin): boolean {

@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
-import { Layers, Check, Info, X, Search } from "lucide-react";
+import { Layers, Check, Info, X, Search, RefreshCw } from "lucide-react";
 import { splashUrl, findChampionByName, championAvatar } from "../hooks/useChampions";
 import { lookupSplashNum, lookupChromaInfo, ensureChromaInfo } from "../hooks/useSkinData";
+import { skinKey } from "../hooks/useSkinUpdates";
 import type { DownloadedSkin } from "../types";
 
 function useChromaReady(): boolean {
@@ -35,6 +36,10 @@ interface MySkinsProps {
   selection: Selection;
   onSelectionChange: (selection: Selection) => void;
   onDelete: (championName: string, skinName: string) => Promise<void>;
+  outdatedKeys: Set<string>; // skinKey()s republished upstream since download
+  updateCount: number;
+  updating: boolean;
+  onUpdateAll: () => void;
 }
 
 function SkinThumb({ championName, skinName }: { championName: string; skinName: string }) {
@@ -97,6 +102,10 @@ export default function MySkins({
   selection,
   onSelectionChange,
   onDelete,
+  outdatedKeys,
+  updateCount,
+  updating,
+  onUpdateAll,
 }: MySkinsProps) {
   const chromaReady = useChromaReady(); // re-render once Community Dragon chroma data lands
 
@@ -216,11 +225,29 @@ export default function MySkins({
           />
         </div>
 
-        {selectedCount > 0 && (
-          <span className="text-gold-400 ml-auto text-sm font-medium tabular-nums select-none">
-            {selectedCount} selected
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-3">
+          {updateCount > 0 && (
+            <button
+              onClick={onUpdateAll}
+              disabled={updating}
+              title="These skins were republished on LeagueSkins (e.g. sound fixes) since you downloaded them"
+              className={[
+                "border-gold-400/40 text-gold-400 flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-xs font-medium tabular-nums transition-colors select-none",
+                updating ? "cursor-default opacity-60" : "hover:bg-gold-400/10 cursor-pointer",
+              ].join(" ")}
+            >
+              <RefreshCw size={12} strokeWidth={2} className={updating ? "animate-spin" : ""} />
+              {updating
+                ? "Updating..."
+                : `Update ${updateCount} ${updateCount === 1 ? "skin" : "skins"}`}
+            </button>
+          )}
+          {selectedCount > 0 && (
+            <span className="text-gold-400 text-sm font-medium tabular-nums select-none">
+              {selectedCount} selected
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="bg-gold-400/8 border-gold-400/15 mx-4 mt-3 mb-1 flex items-start gap-2.5 rounded-lg border px-3 py-2.5">
@@ -266,6 +293,13 @@ export default function MySkins({
                     const baseClickable = !patcherActive && group.base !== null;
 
                     const hasChromas = group.chromas.length > 0;
+                    const baseOutdated =
+                      !!group.base &&
+                      outdatedKeys.has(skinKey(group.base.champion_name, group.base.skin_name));
+                    const outdatedChromas = group.chromas.filter((c) =>
+                      outdatedKeys.has(skinKey(c.dl.champion_name, c.dl.skin_name))
+                    ).length;
+                    const groupOutdated = baseOutdated || outdatedChromas > 0;
                     return (
                       <div
                         key={group.baseSkinName}
@@ -319,6 +353,19 @@ export default function MySkins({
                                 }}
                                 title={`Chroma: ${selectedChroma.dl.skin_name}`}
                               />
+                            )}
+
+                            {groupOutdated && (
+                              <div
+                                className="bg-charcoal-600/90 text-gold-400 absolute right-1 bottom-1 z-10 flex h-4 w-4 items-center justify-center rounded-full shadow-sm"
+                                title={
+                                  baseOutdated
+                                    ? "Update available"
+                                    : `Update available for ${outdatedChromas} chroma${outdatedChromas === 1 ? "" : "s"}`
+                                }
+                              >
+                                <RefreshCw size={9} strokeWidth={2.5} />
+                              </div>
                             )}
 
                             <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent px-1.5 pt-4 pb-1">
