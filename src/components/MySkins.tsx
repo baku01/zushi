@@ -16,6 +16,8 @@ import { skinKey } from "../hooks/useSkinUpdates";
 import { useI18n, fold, getLang } from "../lib/i18n";
 import RarityBadge from "./RarityBadge";
 import ArtImage from "./ArtImage";
+import { FormPreview, FormThumb } from "./FormPreview";
+import { formIcon } from "../lib/forms";
 import type { DownloadedSkin } from "../types";
 import type { FormInfo } from "../lib/forms";
 
@@ -67,7 +69,10 @@ function SkinThumb({ championName, skinName }: { championName: string; skinName:
     <>
       <div className="bg-charcoal-600 absolute inset-0" />
       <ArtImage
-        srcs={[id && skinSplashUrlById(id), champ && num !== null ? splashUrl(champ.id, num) : null]}
+        srcs={[
+          id && skinSplashUrlById(id),
+          champ && num !== null ? splashUrl(champ.id, num) : null,
+        ]}
         alt={skinName}
         className="relative h-full w-full object-cover object-[center_30%] group-hover/card:scale-[1.04]"
       />
@@ -205,7 +210,9 @@ export default function MySkins({
     entries.sort((a, b) => a[2].localeCompare(b[2], locale));
     const query = fold(search.trim());
     return query
-      ? entries.filter(([champion, , display]) => fold(champion).includes(query) || fold(display).includes(query))
+      ? entries.filter(
+          ([champion, , display]) => fold(champion).includes(query) || fold(display).includes(query)
+        )
       : entries;
   }, [grouped, search, lang, version]);
 
@@ -233,7 +240,10 @@ export default function MySkins({
 
   return (
     <div className="flex h-full flex-col">
-      <div data-tauri-drag-region className="border-border flex shrink-0 items-center gap-3 border-b px-4 py-2.5">
+      <div
+        data-tauri-drag-region
+        className="border-border flex shrink-0 items-center gap-3 border-b px-4 py-2.5"
+      >
         <span className="text-ink-muted text-sm tabular-nums select-none">
           {t("my.skins", { n: baseSkinCount })}
         </span>
@@ -305,7 +315,10 @@ export default function MySkins({
           {filteredEntries.map(([champion, groups, displayChampion]) => {
             const selectedSkin = selection[champion];
             return (
-              <div key={champion} className="border-border flex items-start gap-4 border-b px-4 py-3">
+              <div
+                key={champion}
+                className="border-border flex items-start gap-4 border-b px-4 py-3"
+              >
                 <div className="flex w-36 shrink-0 items-center gap-2.5 pt-0.5">
                   <ChampAvatar championName={champion} />
                   <div className="min-w-0">
@@ -360,6 +373,12 @@ function SkinTile({
   onDeleteGroup: (championName: string, skinNames: string[]) => void;
 }) {
   const { t } = useI18n();
+  // Form whose picture shows over the thumbnail while its button is hovered.
+  const [preview, setPreview] = useState<{ icon: string | null; label: string } | null>(null);
+  const hover = (icon: string | null, label: string) => ({
+    onMouseEnter: () => setPreview({ icon, label }),
+    onMouseLeave: () => setPreview(null),
+  });
   const baseSelected = selectedSkin === group.baseSkinName;
   const selectedChroma = group.chromas.find((c) => c.dl.skin_name === selectedSkin);
   const selectedForm = group.forms.find((f) => f.dl.skin_name === selectedSkin);
@@ -367,7 +386,8 @@ function SkinTile({
   const baseClickable = !patcherActive && group.base !== null;
   const hasVariants = group.chromas.length > 0 || group.forms.length > 0;
 
-  const isOutdated = (dl: DownloadedSkin) => outdatedKeys.has(skinKey(dl.champion_name, dl.skin_name));
+  const isOutdated = (dl: DownloadedSkin) =>
+    outdatedKeys.has(skinKey(dl.champion_name, dl.skin_name));
   const baseOutdated = !!group.base && isOutdated(group.base);
   const outdatedVariants =
     group.chromas.filter((c) => isOutdated(c.dl)).length +
@@ -385,7 +405,7 @@ function SkinTile({
 
   const pillClass = (selected: boolean) =>
     [
-      "flex h-5 items-center gap-1 rounded-sm border px-1.5 text-[10px] leading-none transition-colors",
+      "flex h-6 items-center gap-1 rounded-sm border px-1.5 text-[10px] leading-none transition-colors",
       patcherActive ? "cursor-default opacity-50" : "cursor-pointer",
       selected
         ? "border-gold-400 bg-gold-400/15 text-gold-300"
@@ -401,11 +421,17 @@ function SkinTile({
     >
       <div className="relative">
         <button
-          onClick={() => baseClickable && group.base && onToggle(group.base.champion_name, group.base.skin_name)}
+          onClick={() =>
+            baseClickable && group.base && onToggle(group.base.champion_name, group.base.skin_name)
+          }
           disabled={!baseClickable}
           className={[
             "relative block aspect-video w-full overflow-hidden rounded transition-all",
-            patcherActive ? "cursor-default opacity-50" : group.base ? "cursor-pointer" : "cursor-default",
+            patcherActive
+              ? "cursor-default opacity-50"
+              : group.base
+                ? "cursor-pointer"
+                : "cursor-default",
             anySelected
               ? "ring-gold-400 ring-offset-charcoal-400 ring-2 ring-offset-1"
               : "ring-charcoal-50/20 hover:ring-charcoal-50/40 ring-1",
@@ -416,6 +442,7 @@ function SkinTile({
           title={group.base ? displayName : t("my.baseMissing", { name: displayName })}
         >
           <SkinThumb championName={champion} skinName={group.baseSkinName} />
+          {preview && <FormPreview icon={preview.icon} label={preview.label} />}
 
           {baseSelected && (
             <div className="bg-gold-400 absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full border border-white/30 shadow-sm">
@@ -425,12 +452,23 @@ function SkinTile({
           {selectedChroma && (
             <div
               className="absolute top-1 right-1 h-5 w-5 rounded-full border-2 border-white shadow-sm"
-              style={{ background: swatchBackground(selectedChroma.colors) ?? "var(--color-gold-400)" }}
+              style={{
+                background: swatchBackground(selectedChroma.colors) ?? "var(--color-gold-400)",
+              }}
             />
           )}
           {selectedForm && (
-            <div className="bg-gold-400 text-charcoal-600 absolute top-1 right-1 flex h-5 items-center gap-1 rounded-full border border-white/30 px-1.5 text-[10px] font-semibold shadow-sm">
-              <Check size={10} strokeWidth={3} />
+            <div className="bg-gold-400 text-charcoal-600 absolute top-1 right-1 z-10 flex h-6 items-center gap-1 rounded-full border border-white/30 pr-1.5 pl-1 text-[10px] font-semibold shadow-sm">
+              {formIcon(selectedForm.form.id) ? (
+                <img
+                  src={formIcon(selectedForm.form.id)!}
+                  alt=""
+                  className="h-4.5 w-4.5 rounded-full object-contain"
+                  draggable={false}
+                />
+              ) : (
+                <Check size={10} strokeWidth={3} />
+              )}
               {formLabelOf(selectedForm.form)}
             </div>
           )}
@@ -438,7 +476,11 @@ function SkinTile({
           {(baseOutdated || outdatedVariants > 0) && (
             <div
               className="bg-charcoal-600/90 text-gold-400 absolute right-1 bottom-1 z-10 flex h-4 w-4 items-center justify-center rounded-full shadow-sm"
-              title={baseOutdated ? t("my.updateAvailable") : t("my.variantUpdates", { n: outdatedVariants })}
+              title={
+                baseOutdated
+                  ? t("my.updateAvailable")
+                  : t("my.variantUpdates", { n: outdatedVariants })
+              }
             >
               <RefreshCw size={9} strokeWidth={2.5} />
             </div>
@@ -467,32 +509,40 @@ function SkinTile({
       {group.forms.length > 0 && (
         <div className="flex flex-wrap gap-1" title={t("my.formTip")}>
           {group.base && (
-            <button
-              onClick={() => onToggle(group.base!.champion_name, group.base!.skin_name)}
-              disabled={patcherActive}
-              className={pillClass(baseSelected)}
-            >
-              {baseSelected && <Check size={9} strokeWidth={3} />}
-              {baseLabel}
-            </button>
+            <span {...hover(group.baseId ? formIcon(group.baseId) : null, baseLabel)}>
+              <button
+                onClick={() => onToggle(group.base!.champion_name, group.base!.skin_name)}
+                disabled={patcherActive}
+                className={pillClass(baseSelected)}
+              >
+                {baseSelected ? (
+                  <Check size={9} strokeWidth={3} />
+                ) : (
+                  <FormThumb icon={group.baseId ? formIcon(group.baseId) : null} />
+                )}
+                {baseLabel}
+              </button>
+            </span>
           )}
           {group.forms.map((f) => {
             const isSel = selectedSkin === f.dl.skin_name;
+            const icon = formIcon(f.form.id);
             return (
-              <button
-                key={f.dl.skin_name}
-                onClick={() => onToggle(f.dl.champion_name, f.dl.skin_name)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  onDelete(f.dl.champion_name, f.dl.skin_name);
-                }}
-                disabled={patcherActive}
-                title={`${downloadedDisplayName(f.dl.champion_name, f.dl.skin_name)}\n(${t("my.rightClickDelete")})`}
-                className={pillClass(isSel)}
-              >
-                {isSel && <Check size={9} strokeWidth={3} />}
-                {formLabelOf(f.form)}
-              </button>
+              <span key={f.dl.skin_name} {...hover(icon, formLabelOf(f.form))}>
+                <button
+                  onClick={() => onToggle(f.dl.champion_name, f.dl.skin_name)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    onDelete(f.dl.champion_name, f.dl.skin_name);
+                  }}
+                  disabled={patcherActive}
+                  title={`${downloadedDisplayName(f.dl.champion_name, f.dl.skin_name)}\n(${t("my.rightClickDelete")})`}
+                  className={pillClass(isSel)}
+                >
+                  {isSel ? <Check size={9} strokeWidth={3} /> : <FormThumb icon={icon} />}
+                  {formLabelOf(f.form)}
+                </button>
+              </span>
             );
           })}
         </div>
@@ -522,7 +572,11 @@ function SkinTile({
                 style={{ background: swatchBackground(c.colors) ?? "var(--color-charcoal-300)" }}
               >
                 {isSel && (
-                  <Check size={9} strokeWidth={3} className="absolute inset-0 m-auto text-white drop-shadow" />
+                  <Check
+                    size={9}
+                    strokeWidth={3}
+                    className="absolute inset-0 m-auto text-white drop-shadow"
+                  />
                 )}
               </button>
             );

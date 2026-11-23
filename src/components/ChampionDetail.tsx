@@ -22,6 +22,8 @@ import {
 } from "../hooks/useChampions";
 import { useI18n, t as translate, type Key } from "../lib/i18n";
 import RarityBadge from "./RarityBadge";
+import { FormPreview, FormThumb } from "./FormPreview";
+import { formIcon } from "../lib/forms";
 import SkinTypeChips from "./SkinTypeChips";
 import type { Champion, Skin, Chroma, SkinGroup } from "../types";
 
@@ -116,39 +118,48 @@ function ChromaSwatch({
 function FormPill({
   label,
   fullName,
+  icon,
   state,
   disabled,
   onDownload,
+  onPreview,
 }: {
   label: string;
   fullName: string;
+  icon: string | null;
   state: SkinState;
   disabled: boolean;
   onDownload: () => void;
+  onPreview: (preview: { icon: string | null; label: string } | null) => void;
 }) {
   const clickable = state.available && !state.downloaded && !disabled;
   return (
-    <button
-      onClick={clickable ? onDownload : undefined}
-      disabled={!clickable}
-      title={variantTitle(fullName, state)}
-      className={[
-        "flex h-5 items-center gap-1 rounded-sm border px-1.5 text-[10px] leading-none transition-colors",
-        state.downloaded
-          ? "border-success/40 bg-success/10 text-success"
-          : state.available
-            ? "border-charcoal-50/30 text-ink-secondary"
-            : "border-charcoal-50/10 text-ink-muted opacity-40",
-        clickable ? "hover:border-gold-400 hover:text-gold-300 cursor-pointer" : "cursor-default",
-      ].join(" ")}
-    >
-      {state.isDownloading ? (
-        <Loader2 size={9} className="animate-spin" />
-      ) : state.downloaded ? (
-        <Check size={9} strokeWidth={3} />
-      ) : null}
-      {label}
-    </button>
+    // A wrapper takes the hover: disabled buttons don't fire mouse events.
+    <span onMouseEnter={() => onPreview({ icon, label })} onMouseLeave={() => onPreview(null)}>
+      <button
+        onClick={clickable ? onDownload : undefined}
+        disabled={!clickable}
+        title={variantTitle(fullName, state)}
+        className={[
+          "flex h-6 items-center gap-1 rounded-sm border px-1.5 text-[10px] leading-none transition-colors",
+          state.downloaded
+            ? "border-success/40 bg-success/10 text-success"
+            : state.available
+              ? "border-charcoal-50/30 text-ink-secondary"
+              : "border-charcoal-50/10 text-ink-muted opacity-40",
+          clickable ? "hover:border-gold-400 hover:text-gold-300 cursor-pointer" : "cursor-default",
+        ].join(" ")}
+      >
+        {state.isDownloading ? (
+          <Loader2 size={9} className="animate-spin" />
+        ) : state.downloaded ? (
+          <Check size={9} strokeWidth={3} />
+        ) : (
+          <FormThumb icon={icon} />
+        )}
+        {label}
+      </button>
+    </span>
   );
 }
 
@@ -173,6 +184,8 @@ function SkinCard({
   const anyDownloading = states.some((s) => s.isDownloading);
   const downloadedCount = states.filter((s) => s.downloaded).length;
   const name = skinDisplayName(group.base);
+  // Form whose picture shows over the splash while its button is hovered.
+  const [preview, setPreview] = useState<{ icon: string | null; label: string } | null>(null);
 
   return (
     <div
@@ -185,6 +198,7 @@ function SkinCard({
     >
       <div className="bg-charcoal-600 relative aspect-video overflow-hidden">
         <SkinSplash skin={group.base} />
+        {preview && <FormPreview icon={preview.icon} label={preview.label} />}
 
         <div className="absolute top-2 right-2 z-10">
           {anyDownloading ? (
@@ -240,18 +254,22 @@ function SkinCard({
               <FormPill
                 label={baseFormLabelOf(group.base.id)}
                 fullName={name}
+                icon={formIcon(group.base.id)}
                 state={baseState}
                 disabled={busy}
                 onDownload={() => onDownloadOne(group.base)}
+                onPreview={setPreview}
               />
               {group.forms.map((f) => (
                 <FormPill
                   key={f.id}
                   label={formLabel(f)}
                   fullName={skinDisplayName(f)}
+                  icon={formIcon(f.id)}
                   state={stateOf(f)}
                   disabled={busy}
                   onDownload={() => onDownloadOne(f)}
+                  onPreview={setPreview}
                 />
               ))}
             </div>

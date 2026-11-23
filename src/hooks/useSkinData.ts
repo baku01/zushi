@@ -97,7 +97,13 @@ function ensureSkinIndexes(): void {
       champToKey.set(name, Math.floor(numericId / 1000));
     }
   }
-  if (forms) for (const f of forms.values()) add(f.id, formEnglishName(f));
+  if (forms) {
+    for (const f of forms.values()) add(f.id, formEnglishName(f));
+    // Forms once had numbered names on disk ("Arcane Fractured Jinx (Form 3)"):
+    // keep finding those downloads after a form gets a real name.
+    for (const f of forms.values())
+      add(f.id, `${skinIdsCache[f.parentId] ?? f.parentId} (Form ${f.n})`);
+  }
   skinNameToId = nameToId;
   skinChampNameToId = champNameToId;
   champNameToKey = champToKey;

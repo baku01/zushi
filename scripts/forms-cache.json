@@ -1,0 +1,513 @@
+{
+ "18079": {
+  "sha": "e7ce594c3b84c196e02722b70e88f5a7098134aa",
+  "meta": "Risen Legend Tristana",
+  "lists": [
+   "Dadbot_F1 Dadbot_F1_Glass Dadbot_L_Eye Dadbot_R_Eye Eyes Furcards Gun_F1 Hair Hair_F1 Head Outfit_F1 Recall_Crown Recall_Drone Recall_Throne",
+   "Recall_Crown Recall_Drone Recall_Throne"
+  ]
+ },
+ "18080": {
+  "sha": "ac742fb5a035d5c6dd1eec7982392a0ba57193a2",
+  "meta": "Tristana skin80",
+  "lists": [
+   "Dadbot_F1 Dadbot_F1_Glass Dadbot_F2 Dadbot_F2_Glass Dadbot_F3 Dadbot_F3_Glass Dadbot_L_Eye Dadbot_R_Eye Eyes Furcards Gun_F1 Gun_F2 Gun_F3 Hair Hair_F1 Hair_F3 Head Outfit_F1 Outfit_F2 Outfit_F3 Recall_Crown Recall_Drone Recall_Throne Tassels_Bot_F2 Tassels_Bot_F3 Tassels_Top_F2 Tassels_Top_F3 Visor_F3 Visor_F3_L_Eye Visor_F3_R_Eye Visor_Glass_F3",
+   "Recall_Crown Recall_Drone Recall_Throne"
+  ]
+ },
+ "21016": {
+  "sha": "e0a4d25785fd78fba1fb03173b0860af9f5d24c2",
+  "meta": "Gun Goddess Miss Fortune",
+  "lists": [
+   "Aurelion Sol",
+   "Dark Star",
+   "Fate Twisted",
+   "First Move",
+   "Goddess Gun",
+   "Handsome Men",
+   "Joke Response",
+   "Kench Tahm",
+   "Response Taunt",
+   "Weapon1 Weapon2 Weapon3"
+  ]
+ },
+ "21997": {
+  "sha": "f38249e71e62bb1efa5d4d7cf81145c7a663af7c",
+  "meta": "Gun Goddess Miss Fortune - ZeroHour",
+  "lists": [
+   "Aurelion Sol",
+   "Dark Star",
+   "Fate Twisted",
+   "First Move",
+   "Goddess Gun",
+   "Handsome Men",
+   "Joke Response",
+   "Kench Tahm",
+   "Response Taunt",
+   "Weapon0 Weapon2 Weapon3"
+  ]
+ },
+ "21998": {
+  "sha": "6c4d9bc636f8d4b5ab23bc350f9b64eb66447740",
+  "meta": "Gun Goddess Miss Fortune - RoyalArms",
+  "lists": [
+   "Aurelion Sol",
+   "Dark Star",
+   "Fate Twisted",
+   "First Move",
+   "Goddess Gun",
+   "Handsome Men",
+   "Joke Response",
+   "Kench Tahm",
+   "Response Taunt",
+   "Weapon0 Weapon1 Weapon3"
+  ]
+ },
+ "21999": {
+  "sha": "b680df3d70a83d0abf793283c058e6b1bb003f16",
+  "meta": "Gun Goddess Miss Fortune - Starswarm",
+  "lists": [
+   "Aurelion Sol",
+   "Dark Star",
+   "Fate Twisted",
+   "First Move",
+   "Goddess Gun",
+   "Handsome Men",
+   "Joke Response",
+   "Kench Tahm",
+   "Response Taunt",
+   "Weapon0 Weapon1 Weapon2"
+  ]
+ },
+ "25080": {
+  "sha": "19e0a8ce291b6da1c1635cdd666bc71ad8b14768",
+  "meta": "Spirit Blossom Morgana",
+  "lists": [
+   "Body BodyMask_01 BodyMask_02 BodyMask_03 FX_Wings FirstForm Flower Horns Mask_01 Mask_02 Mask_03 Rope SecondFormWing SecondFormWingShoulder Superbloom WingShoulders Wings",
+   "BodyMask_02 BodyMask_03 FX_Wings Horns Mask_01 Mask_02 Mask_03 Rope SecondFormWing SecondFormWingShoulder Superbloom SuperbloomUlt"
+  ]
+ },
+ "25999": {
+  "sha": "84ae259c4c7f2d6213ef6d3f128484f8f02f2948",
+  "meta": "Morgana skin80",
+  "lists": [
+   "Body BodyMask_01 BodyMask_02 BodyMask_03 FX_Wings FirstForm Flower Horns Mask_01 Mask_02 Mask_03 Rope SecondFormWing SecondFormWingShoulder Superbloom WingShoulders Wings",
+   "BodyMask_02 BodyMask_03 FX_Wings FirstForm FirstFormUlt Mask_01 Mask_02 Mask_03 WingShoulders Wings",
+   "GLow Mask",
+   "GLow1 Mask"
+  ]
+ },
+ "37006": {
+  "sha": "7316add415a1756755a214473635b468fdb52832",
+  "meta": "DJ Sona",
+  "lists": [
+   "God centerBurst1 ray",
+   "Praxis alpha"
+  ]
+ },
+ "37998": {
+  "sha": "ce377d598d939f7e47600a968ffff92289529193",
+  "meta": "DJ Sona (Form 2)",
+  "lists": [
+   "God centerBurst1 ray",
+   "Praxis alpha"
+  ]
+ },
+ "37999": {
+  "sha": "1eeccd287235b2701c04acbab739927808821814",
+  "meta": "DJ Sona (Form 3)",
+  "lists": [
+   "God centerBurst1 ray",
+   "Praxis alpha"
+  ]
+ },
+ "82054": {
+  "sha": "fc433284ce42a9b8628116f5da9de79264a3e24b",
+  "meta": "Sahn-Uzal Mordekaiser",
+  "lists": [
+   "Form2 Form2Crown Ult Ult_Flames1 Ult_Flames2 Ult_Flames3 Ult_Flames4 VFXHair Weapon2"
+  ]
+ },
+ "82998": {
+  "sha": "a2e75546c1e20738c71265d1e91301f0a1cda8de",
+  "meta": "Mordekaiser skin54",
+  "lists": [
+   "Form1 Form2Crown Weapon1"
+  ]
+ },
+ "82999": {
+  "sha": "16e5a162f4ee12989826ca3362b563ac01ff52de",
+  "meta": "Mordekaiser skin54",
+  "lists": [
+   "Form1 Ult Ult_Flames1 Ult_Flames2 Ult_Flames3 Ult_Flames4 Weapon1"
+  ]
+ },
+ "99007": {
+  "sha": "f7061a81c7772f144c9bf3c02b2f3d41531b9c1f",
+  "meta": "Elementalist Lux",
+  "lists": []
+ },
+ "99991": {
+  "sha": "98c629b1c578babe16c70c33aaab930355d66739",
+  "meta": "Lux Elementalist Air",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99992": {
+  "sha": "c7aafd67877ebd6e6983994558a4938db860c423",
+  "meta": "Lux Elementalist Dark",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99993": {
+  "sha": "eeabdeff56ce1f4fa4f1485625aa11b6511efc8a",
+  "meta": "Lux Elementalist Ice",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99994": {
+  "sha": "4f795bd2de91fda782e50bd453ef83148a2904c6",
+  "meta": "Lux Elementalist Magma",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99995": {
+  "sha": "e4a8ba034c8ff4b459cf2a60c1cbd13596de803c",
+  "meta": "Lux Elementalist Mystic",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99996": {
+  "sha": "5ef3c646e09dc2ce49fe2ebe293f73d24406d3f1",
+  "meta": "Lux Elementalist Nature",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99997": {
+  "sha": "39af84c4025928af5045970bfc99fa2c35ba0be2",
+  "meta": "Lux Elementalist Storm",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99998": {
+  "sha": "9f3bfef2d2c2f0a7e5ed3b88039d7f96bef9d520",
+  "meta": "Lux Elementalist Water",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "99999": {
+  "sha": "34b14ef052af2e2ccaf0308ae8cadc0b6be4ac15",
+  "meta": "Lux Elementalist Fire",
+  "lists": [
+   "Basic Crit",
+   "First Move",
+   "Kill Turret",
+   "Response Taunt"
+  ]
+ },
+ "103085": {
+  "sha": "8a2ac95a1fd4e286ae3f4b24dca8dff5edf25318",
+  "meta": "Risen Legend Ahri",
+  "lists": [
+   "Arch Broccoli Cactus Form_2 Form_2_and_3 Form_3 Form_4 Fox_Head_Large Fox_Heads Tail_Large Tail_Tip_Large Throne Trophy_New Trophy_New_2 Trophy_Old_1 Trophy_Old_2 Trophy_Old_3"
+  ]
+ },
+ "103086": {
+  "sha": "1d8b47067e0aec2aca071d78f980f4f3a95fb4df",
+  "meta": "Ahri skin86",
+  "lists": [
+   "Arch Broccoli Cactus Form_1 Form_3 Form_4 Fox_Head_Large Tail_Large Tail_Tip_Large Tail_Tips Throne Trophy_New Trophy_New_2 Trophy_Old_1 Trophy_Old_2 Trophy_Old_3"
+  ]
+ },
+ "103087": {
+  "sha": "1002b792ca47d9f354c3e61c0456db64b65b71d1",
+  "meta": "Ahri skin86",
+  "lists": [
+   "Broccoli Cactus Form_1 Form_1_and_2 Form_2 Form_4 Fox_Head_Large Tail_Large Tail_Tip_Large Tail_Tips Throne Trophy_New Trophy_New_2 Trophy_Old_1 Trophy_Old_2 Trophy_Old_3"
+  ]
+ },
+ "145070": {
+  "sha": "3b529d21c1c8e1350a875a76843df3c1d9f03759",
+  "meta": "Risen Legend Kai'Sa",
+  "lists": [
+   "Beansprout Bottle Crystal Crystal1 Crystal2 Crystal3 Dog_Heads Form2_Changes Form3_Changes Headphones Left_Cannon Mask Pistols_Base Pistols_Form1 Pistols_Form2 Pistols_Form3 Right_Cannon Throne"
+  ]
+ },
+ "145071": {
+  "sha": "5eeb280ec0a278f3b7d88a4bd93d1ae5de826689",
+  "meta": "Kaisa skin71",
+  "lists": [
+   "Beansprout Bottle Crystal Crystal1 Crystal2 Crystal3 Dog_Form1 Dog_Heads Form1_Changes Form3_Changes Headphones Mask Pistols_Base Pistols_Form1 Pistols_Form2 Pistols_Form3 Throne"
+  ]
+ },
+ "145999": {
+  "sha": "e6fae3096169d7e2bc8a426337ac3c3ae4fc66cb",
+  "meta": "Kaisa skin71",
+  "lists": [
+   "Beansprout Bottle Crystal1 Crystal2 Crystal3 Dog_Form1 Dog_Form2 Energy Form1_Changes Form2_Changes Hands_Form2 Headphones Knee_Armor Mask Pistols_Base Pistols_Form1 Pistols_Form2 Pistols_Form3 Throne"
+  ]
+ },
+ "147001": {
+  "sha": "fea7ec042b6277c8fa142f60882688fbd1b3c73e",
+  "meta": "K/DA ALL OUT Seraphine Indie",
+  "lists": [
+   "Bar Cat02 Guitar_MAT Headphone_MAT Mic Phone_MAT Plane Speakers_MAT UltSpeaker"
+  ]
+ },
+ "147002": {
+  "sha": "accb9d42e480b4ca60151ac0247ae96fbf733b22",
+  "meta": "K/DA ALL OUT Seraphine Rising Star",
+  "lists": [
+   "Hanging_Microphone_MAT Headphone_MAT Phone_MAT Sound_Panel_MAT Speakers_MAT"
+  ]
+ },
+ "147003": {
+  "sha": "dd0d96615ffe6514f901e6e3584e6e7de126dbd7",
+  "meta": "K/DA ALL OUT Seraphine Superstar",
+  "lists": [
+   "Bed_MAT Flower_MAT Guitar_MAT Headphone_MAT Phone_MAT Speakers_Mat Table_MAT"
+  ]
+ },
+ "222060": {
+  "sha": "6f3e6992c65e2b259be1f1d8de1b76489d953d63",
+  "meta": "Arcane Fractured Jinx",
+  "lists": [
+   "Body Flag Hair Helmet Hood Hood_Hair PowderBody SlotMachine Torch Zapper_Mesh",
+   "JinxMine JinxMinePowder"
+  ]
+ },
+ "222998": {
+  "sha": "937efb3588027ddda3c1211778fd554361749603",
+  "meta": "Jinx skin60",
+  "lists": [
+   "Flag Hair Helmet PowderBody ShimmerBody ShimmerHair SlotMachine Torch Zapper_Mesh",
+   "JinxMinePowder JinxMineShimmer"
+  ]
+ },
+ "222999": {
+  "sha": "554dc2824778b0fbea3c6a91843640f03c92d2d9",
+  "meta": "Jinx skin60",
+  "lists": [
+   "Body Flag Hair Helmet Hood Hood_Hair ShimmerBody ShimmerHair SlotMachine Torch Zapper_Mesh",
+   "JinxMine JinxMineShimmer"
+  ]
+ },
+ "234043": {
+  "sha": "1dc9287c206e4c7809c582a01dc8d632252f2e2f",
+  "meta": "Revenant Reign Viego",
+  "lists": [
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Assassin_Sword Fighter_Sword Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Support_Sword Tank_Sword VFX_DryIce_AssassinSword",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "234994": {
+  "sha": "288198ecc8ff20c69201293b55b76b576114f878",
+  "meta": "Viego skin43",
+  "lists": [
+   "Albedo Remap",
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Base Settings",
+   "Base_Sword Fighter_Sword Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Support_Sword Tank_Sword",
+   "Bloom Feature",
+   "Deform Feature Vertex",
+   "Diffuse Feature Flow Map Tex for",
+   "Effect Transition",
+   "Face Feature Inside",
+   "Feature Scrolling Surface",
+   "Feature Swirls",
+   "Highlight Stylized",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "234995": {
+  "sha": "bf85591bc51bb9c04f6c38325b5c0c6225293a9b",
+  "meta": "Viego skin43",
+  "lists": [
+   "Albedo Remap",
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Assassin_Sword Base_Sword Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Support_Sword Tank_Sword VFX_DryIce_AssassinSword",
+   "Base Settings",
+   "Bloom Feature",
+   "Deform Feature Vertex",
+   "Diffuse Feature Flow Map Tex for",
+   "Effect Transition",
+   "Face Feature Inside",
+   "Feature Scrolling Surface",
+   "Feature Swirls",
+   "Highlight Stylized",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "234996": {
+  "sha": "43efe931d511760154e434c9990ec5d6fdf32933",
+  "meta": "Viego skin43",
+  "lists": [
+   "Albedo Remap",
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Assassin_Sword Base_Sword Fighter_Sword Horns Marksman_Sword Support_Sword Tank_Sword VFX_DryIce_AssassinSword",
+   "Base Settings",
+   "Bloom Feature",
+   "Deform Feature Vertex",
+   "Diffuse Feature Flow Map Tex for",
+   "Effect Transition",
+   "Face Feature Inside",
+   "Feature Scrolling Surface",
+   "Feature Swirls",
+   "Highlight Stylized",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "234997": {
+  "sha": "bc9b4b7844435f43fd6a6902d8390e8c19c17bd4",
+  "meta": "Viego skin43",
+  "lists": [
+   "Albedo Remap",
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Assassin_Sword Base_Sword Fighter_Sword Horns Mage_Sword Mage_Sword_Outline Support_Sword Tank_Sword VFX_DryIce_AssassinSword",
+   "Base Settings",
+   "Bloom Feature",
+   "Deform Feature Vertex",
+   "Diffuse Feature Flow Map Tex for",
+   "Effect Transition",
+   "Face Feature Inside",
+   "Feature Scrolling Surface",
+   "Feature Swirls",
+   "Highlight Stylized",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "234998": {
+  "sha": "c5b4a791193a5417ddf84162e026bffe14508708",
+  "meta": "Viego skin43",
+  "lists": [
+   "Albedo Remap",
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Assassin_Sword Base_Sword Fighter_Sword Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Tank_Sword VFX_DryIce_AssassinSword",
+   "Base Settings",
+   "Bloom Feature",
+   "Deform Feature Vertex",
+   "Diffuse Feature Flow Map Tex for",
+   "Effect Transition",
+   "Face Feature Inside",
+   "Feature Scrolling Surface",
+   "Feature Swirls",
+   "Highlight Stylized",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "234999": {
+  "sha": "9640c47de9701466ab1381f73a1261edcff1bd8a",
+  "meta": "Viego skin43",
+  "lists": [
+   "Albedo Remap",
+   "Assassin_Sword Base_Sword Body Fighter_Sword Hair Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Skirt Support_Sword Tank_Sword VFX_DryIce_AssassinSword VFX_DryIce_Skirt",
+   "Assassin_Sword Base_Sword Fighter_Sword Horns Mage_Sword Mage_Sword_Outline Marksman_Sword Support_Sword VFX_DryIce_AssassinSword",
+   "Base Settings",
+   "Bloom Feature",
+   "Deform Feature Vertex",
+   "Diffuse Feature Flow Map Tex for",
+   "Effect Transition",
+   "Face Feature Inside",
+   "Feature Scrolling Surface",
+   "Feature Swirls",
+   "Highlight Stylized",
+   "VFX_DryIce_AssassinSword VFX_DryIce_Skirt"
+  ]
+ },
+ "875066": {
+  "sha": "c9b6f3f615fd20e92fa7d8a705ab7dd1193a0ba1",
+  "meta": "Radiant Serpent Sett",
+  "lists": [
+   "Dark Emblem Envelopes Gold SnakeDark SnakeW"
+  ]
+ },
+ "875998": {
+  "sha": "d952bd7430ff571ed1eec12c3706531550a615e0",
+  "meta": "Sett.wad",
+  "lists": [
+   "Blue Form Into",
+   "Buy Mom present",
+   "Dark Emblem Envelopes Gold SnakeDark SnakeW",
+   "Dust FX L",
+   "Dust FX R",
+   "Empowered W",
+   "FX Ground Hit L",
+   "FX Ground Hit R",
+   "FX Hit L",
+   "FX Hit R",
+   "FX L Miss",
+   "FX Miss R",
+   "First Move",
+   "Form Gold Into",
+   "Glow Hot",
+   "God ray small subtract",
+   "High Noon",
+   "Joke Response",
+   "Normal W",
+   "Particles Swirl",
+   "Response Taunt",
+   "are glow"
+  ]
+ },
+ "875999": {
+  "sha": "b2cd068b9e9c3e5b99ea45721ee9d8f0e70b9660",
+  "meta": "Sett.wad",
+  "lists": [
+   "Blue Form Into",
+   "Buy Mom present",
+   "Dark Emblem Envelopes Gold SnakeDark SnakeW",
+   "Dust FX L",
+   "Dust FX R",
+   "Empowered W",
+   "FX Ground Hit L",
+   "FX Ground Hit R",
+   "FX Hit L",
+   "FX Hit R",
+   "FX L Miss",
+   "FX Miss R",
+   "First Move",
+   "Form Gold Into",
+   "Glow Hot",
+   "God ray small subtract",
+   "High Noon",
+   "Joke Response",
+   "Normal W",
+   "Particles Swirl",
+   "Response Taunt",
+   "are glow"
+  ]
+ }
+}

@@ -14,25 +14,28 @@
   "21016": {
     "base": {
       "en": "Scarlet Fair",
-      "pt": null
+      "pt": "Diva Escarlate"
     },
     "forms": {
       "21997": {
         "en": "Zero Hour",
-        "pt": null
+        "pt": "Hora Zero"
       },
       "21998": {
         "en": "Royal Arms",
-        "pt": null
+        "pt": "Realeza Bélica"
       },
       "21999": {
         "en": "Starswarm",
-        "pt": null
+        "pt": "Enxame Estelar"
       }
     }
   },
   "25080": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "25999": {
         "en": null,
@@ -41,7 +44,10 @@
     }
   },
   "37006": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "37998": {
         "en": null,
@@ -54,7 +60,10 @@
     }
   },
   "82054": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "82998": {
         "en": null,
@@ -67,7 +76,10 @@
     }
   },
   "99007": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "99991": {
         "en": "Air",
@@ -75,7 +87,7 @@
       },
       "99992": {
         "en": "Dark",
-        "pt": "Trevas"
+        "pt": "Escuridão"
       },
       "99993": {
         "en": "Ice",
@@ -87,7 +99,7 @@
       },
       "99995": {
         "en": "Mystic",
-        "pt": "Mística"
+        "pt": "Místico"
       },
       "99996": {
         "en": "Nature",
@@ -114,12 +126,12 @@
     },
     "forms": {
       "103086": {
-        "en": "Immortalized Legend",
-        "pt": "Lenda Imortalizada"
+        "en": "Chosen",
+        "pt": "Escolhida"
       },
       "103087": {
-        "en": null,
-        "pt": null
+        "en": "Immortalized Legend",
+        "pt": "Lenda Imortalizada"
       }
     }
   },
@@ -130,12 +142,12 @@
     },
     "forms": {
       "145071": {
-        "en": "Immortalized Legend",
-        "pt": "Lenda Imortalizada"
+        "en": "Chosen",
+        "pt": "Escolhida"
       },
       "145999": {
-        "en": null,
-        "pt": null
+        "en": "Immortalized Legend",
+        "pt": "Lenda Imortalizada"
       }
     }
   },
@@ -156,49 +168,58 @@
     }
   },
   "222060": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "222998": {
         "en": null,
         "pt": null
       },
       "222999": {
-        "en": null,
-        "pt": null
+        "en": "Powder",
+        "pt": "Powder"
       }
     }
   },
   "234043": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "234994": {
-        "en": null,
-        "pt": null
+        "en": "Assassin",
+        "pt": "Assassino"
       },
       "234995": {
-        "en": null,
-        "pt": null
+        "en": "Fighter",
+        "pt": "Lutador"
       },
       "234996": {
-        "en": null,
-        "pt": null
+        "en": "Mage",
+        "pt": "Mago"
       },
       "234997": {
-        "en": null,
-        "pt": null
+        "en": "Marksman",
+        "pt": "Atirador"
       },
       "234998": {
-        "en": null,
-        "pt": null
+        "en": "Support",
+        "pt": "Suporte"
       },
       "234999": {
-        "en": null,
-        "pt": null
+        "en": "Tank",
+        "pt": "Tanque"
       }
     }
   },
   "875066": {
-    "base": null,
+    "base": {
+      "en": null,
+      "pt": null
+    },
     "forms": {
       "875998": {
         "en": null,

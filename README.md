@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/platform-macOS-black" alt="Platform" />
   <img src="https://img.shields.io/badge/tauri-2-24C8D8" alt="Tauri" />
   <img src="https://img.shields.io/badge/react-19-61DAFB" alt="React" />
-  <img src="https://img.shields.io/badge/version-0.1.19-c89b3c" alt="Version" />
+  <img src="https://img.shields.io/badge/version-0.1.20-c89b3c" alt="Version" />
 </p>
 
 <p align="center">
@@ -90,3 +90,5 @@ This project is licensed under the MIT License.
 
 - [cslol-manager](https://github.com/LeagueToolkit/cslol-manager) - modding tools
 - [LeagueSkins](https://github.com/Alban1911/LeagueSkins) - a comprehensive collection of League of Legends skin assets, organized by champion and skin IDs
+- [Rose](https://github.com/Alban1911/Rose) - pictures of skin forms (`src/assets/forms`, from its FormsWheel buttons, MIT, Copyright (c) 2026 Alban and Florent)
+- [Community Dragon](https://www.communitydragon.org) - skin art, rarities and the game text that names skin forms
