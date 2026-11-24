@@ -1,5 +1,9 @@
+#include <algorithm>
+#include <cctype>
 #include <error.hpp>
 #include <io/file.hpp>
+#include <log.hpp>
+#include <optional>
 #include <wad/index.hpp>
 
 using namespace lol;
@@ -135,10 +139,59 @@ auto Index::touch() -> void {
     }
 }
 
+// "jinx.en_us" -> {"jinx", "en_us"}: a locale WAD's stem and language; nothing for other names.
+static auto split_locale_mount(std::string_view name) noexcept -> std::optional<std::pair<std::string, std::string>> {
+    auto const dot = name.rfind('.');
+    if (dot == std::string_view::npos || dot == 0) return std::nullopt;
+    auto const stem = name.substr(0, dot);
+    auto const locale = name.substr(dot + 1);
+    if (stem.find('.') != std::string_view::npos || locale.size() != 5 || locale[2] != '_') return std::nullopt;
+    for (auto i : {0, 1, 3, 4}) {
+        if (!std::isalpha(static_cast<unsigned char>(locale[i]))) return std::nullopt;
+    }
+    return std::pair{std::string(stem), std::string(locale)};
+}
+
 auto Index::rebase_from_game(Index const& game) const -> Index {
     lol_trace_func(lol_trace_var("{}", this->name));
     auto copy = Index{};
+    auto remapped = std::vector<Mounted>{};  // merged last: the mod's own WAD of that language wins
     for (auto const& [mount_name, mounted] : mounts) {
+        // A locale WAD (voice lines, text) of a language the game isn't installed in, e.g. a skin
+        // shipping Mordekaiser.en_US.wad.client to a pt_BR game. Every language's WAD holds its
+        // files at the same (en_US) paths, so matching it by overlap would put its lines over the
+        // game's own language. It goes in the game's locale WAD of that WAD instead, without the
+        // files the game has in its language: those stay the player's; files new to the game stay.
+        if (auto const split = split_locale_mount(mount_name); split && !game.mounts.contains(mount_name)) {
+            auto const& [stem, locale] = *split;
+            auto targets = std::vector<Mounted const*>{};
+            for (auto const& [game_name, game_mounted] : game.mounts) {
+                if (auto const other = split_locale_mount(game_name); other && other->first == stem) {
+                    targets.push_back(&game_mounted);
+                }
+            }
+            if (!targets.empty()) {
+                auto kept = mounted.archive;
+                std::erase_if(kept.entries, [&](auto const& kvp) {
+                    return std::any_of(targets.begin(), targets.end(), [&](Mounted const* target) {
+                        return target->archive.entries.contains(kvp.first);
+                    });
+                });
+                auto const dropped = mounted.archive.entries.size() - kept.entries.size();
+                if (dropped) {
+                    logi("{}: kept the game's {} file(s) over the mod's {} ones in {}",
+                         this->name,
+                         dropped,
+                         locale,
+                         targets.front()->relpath.filename().generic_string());
+                }
+                if (!kept.entries.empty()) {
+                    remapped.push_back(Mounted{mounted.relpath.parent_path() / targets.front()->relpath.filename(),
+                                               std::move(kept)});
+                }
+                continue;
+            }
+        }
         if (mount_name.empty() || !game.mounts.contains(mount_name)) {
             auto base_mounted = game.find_by_overlap(mounted.archive);
             lol_throw_if_msg(!base_mounted, "Failed to find base wad for: {}", mount_name);
@@ -147,6 +200,12 @@ auto Index::rebase_from_game(Index const& game) const -> Index {
             continue;
         }
         copy.mounts.emplace(mount_name, mounted);
+    }
+    for (auto& extra : remapped) {
+        auto [target, inserted] = copy.mounts.try_emplace(extra.name(), extra);
+        if (!inserted) {
+            for (auto const& entry : extra.archive.entries) target->second.archive.entries.try_emplace(entry.first, entry.second);
+        }
     }
     return copy;
 }
