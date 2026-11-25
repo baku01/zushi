@@ -317,6 +317,7 @@ pub fn run() {
             commands::skins::download_multiple_skins,
             commands::skins::list_downloaded_skins,
             commands::skins::delete_downloaded_skin,
+            commands::skins::delete_downloaded_skins,
             commands::skins::get_skins_dir_size,
             commands::skins::clear_all_skins,
             commands::customs::import_custom,

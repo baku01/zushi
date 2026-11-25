@@ -14,7 +14,7 @@ interface ArtImageProps {
 const SOURCE_TIMEOUT_MS = 8000;
 
 /**
- * Image with fallbacks over a shimmer placeholder. The image is drawn above the
+ * Image with fallbacks over a placeholder. The image is drawn above the
  * placeholder, so it shows as soon as it paints even if no load event arrives.
  */
 export default function ArtImage({
@@ -51,14 +51,14 @@ export default function ArtImage({
 
   return (
     <>
-      {!loaded && (
-        <div className="from-charcoal-600 via-charcoal-300 to-charcoal-600 animate-shimmer absolute inset-0 bg-linear-to-r bg-size-[200%_100%]" />
-      )}
+      {/* Static placeholder: an infinite animation on every tile of a long list repaints
+          the whole grid each frame and is what made scrolling stutter. */}
+      {!loaded && <div className="bg-charcoal-300/60 absolute inset-0" />}
       <img
         key={src}
         src={src}
         alt={alt}
-        className={`relative ${className} transition-transform duration-300`}
+        className={`relative ${className} animate-fade-in transition-transform duration-300`}
         loading={lazy ? "lazy" : "eager"}
         decoding="async"
         draggable={false}

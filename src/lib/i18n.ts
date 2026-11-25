@@ -79,6 +79,8 @@ const en = {
   "my.baseMissing": "{name} (base not downloaded)",
   "my.delete": "Delete skin",
   "my.deleteGroup": "Delete skin and its variants",
+  "my.deleteConfirm": "Delete {n}?",
+  "my.deleted": { one: "Skin deleted", other: "{n} skins deleted" },
   "my.rightClickDelete": "right-click to delete",
   "my.updateAvailable": "Update available",
   "my.variantUpdates": {
@@ -122,7 +124,7 @@ const en = {
   "settings.content": "Skins & custom mods",
   "settings.contentHint": "Downloaded skins and imported mods",
   "settings.work": "Patcher data",
-  "settings.workHint": "Temporary overlay files, rebuilt on apply",
+  "settings.workHint": "Overlay files hold a full copy of each patched champion (~60 MB each). Freed automatically when the game closes",
   "settings.clear": "Clear",
   "settings.stopFirst": "Stop the patcher before clearing data.",
 
@@ -232,6 +234,8 @@ const pt: Record<Key, Entry> = {
   "my.baseMissing": "{name} (base não baixada)",
   "my.delete": "Excluir skin",
   "my.deleteGroup": "Excluir a skin e as variações",
+  "my.deleteConfirm": "Excluir {n}?",
+  "my.deleted": { one: "Skin excluída", other: "{n} skins excluídas" },
   "my.rightClickDelete": "clique direito para excluir",
   "my.updateAvailable": "Atualização disponível",
   "my.variantUpdates": {
@@ -275,7 +279,7 @@ const pt: Record<Key, Entry> = {
   "settings.content": "Skins e mods",
   "settings.contentHint": "Skins baixadas e mods importados",
   "settings.work": "Dados do patcher",
-  "settings.workHint": "Arquivos temporários do overlay, recriados ao aplicar",
+  "settings.workHint": "O overlay guarda uma cópia completa de cada campeão aplicado (~60 MB cada). Liberado automaticamente ao fechar o jogo",
   "settings.clear": "Limpar",
   "settings.stopFirst": "Pare o patcher antes de limpar os dados.",
 

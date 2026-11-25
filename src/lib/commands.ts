@@ -55,6 +55,12 @@ export async function deleteDownloadedSkin(championName: string, skinName: strin
   return invoke("delete_downloaded_skin", { championName, skinName });
 }
 
+export async function deleteDownloadedSkins(
+  items: { championName: string; skinName: string }[]
+): Promise<void> {
+  return invoke("delete_downloaded_skins", { items });
+}
+
 export async function getSkinsDirSize(): Promise<number> {
   return invoke<number>("get_skins_dir_size");
 }

@@ -56,7 +56,7 @@ export default function StatusBar({
     .join(" · ");
 
   return (
-    <footer className="border-border bg-charcoal-500/85 flex items-center gap-3 border-t px-4 py-2.5 backdrop-blur">
+    <footer className="border-border bg-charcoal-500 flex items-center gap-3 border-t px-4 py-2.5">
       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotClass}`} />
       {spinner && <Loader2 size={14} className="text-gold-400 shrink-0 animate-spin" />}
       <span

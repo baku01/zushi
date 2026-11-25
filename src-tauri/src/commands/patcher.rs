@@ -3,6 +3,7 @@ use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use tauri::{AppHandle, Manager, State};
 
@@ -22,6 +23,20 @@ fn work_dir(app: &AppHandle) -> PathBuf {
         .expect("failed to get app data dir");
     fs::create_dir_all(&dir).ok();
     dir
+}
+
+/// The overlay holds a full rewritten copy of every patched champion's WAD
+/// (tens of MB each), and `installed` the unpacked skins it was built from.
+/// Neither is needed once the game that used them has closed.
+fn discard_patch_files(base: &std::path::Path, state: &Arc<Mutex<AppState>>, gen: u64) {
+    // Under the setup lock a newer apply can't be rebuilding these folders, and once
+    // we hold it a superseding apply is visible as a changed generation.
+    let _guard = apply_setup_lock().lock().unwrap_or_else(|e| e.into_inner());
+    if state.lock().map(|s| s.patcher_gen != gen).unwrap_or(true) {
+        return;
+    }
+    let _ = fs::remove_dir_all(base.join("overlay"));
+    let _ = fs::remove_dir_all(base.join("installed"));
 }
 
 fn sidecar_path(_app: &AppHandle) -> PathBuf {
@@ -125,6 +140,7 @@ fn start_apply(
     let base = work_dir(&app);
 
     std::thread::spawn(move || {
+        let cleanup_base = base.clone();
         // Serialize the whole setup so two patchers can never run at once. This
         // blocks until any in-flight apply has finished spawning and *recorded*
         // its pid — only then can we see and kill it. Released before monitoring.
@@ -185,6 +201,8 @@ fn start_apply(
                     s.patcher_pid = None;
                 }
             }
+            // A failed setup leaves a half-built overlay behind.
+            discard_patch_files(&cleanup_base, &state, gen);
         }
     });
 
@@ -255,6 +273,9 @@ fn do_apply_skins_bg(
         }
     })?;
 
+    // The overlay is self-contained: the unpacked skins are dead weight from here on.
+    let _ = fs::remove_dir_all(&installed_dir);
+
     // Step 3: Run patcher
     {
         if let Ok(mut s) = state.lock() {
@@ -301,6 +322,12 @@ fn do_apply_skins_bg(
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
 
+    // Whether the patcher ever reached the game / the game has since closed.
+    // Only then (or never) is it safe to delete the overlay the game reads from.
+    let game_seen = Arc::new(AtomicBool::new(false));
+    let game_exited = Arc::new(AtomicBool::new(false));
+    let (seen_t, exited_t) = (game_seen.clone(), game_exited.clone());
+
     let state_arc = state.clone();
     let stdout_thread = std::thread::spawn(move || {
         if let Some(out) = stdout {
@@ -317,6 +344,11 @@ fn do_apply_skins_bg(
                         "League exited" => Some(PatcherStatus::GameExited),
                         _ => None,
                     };
+                    match new_status {
+                        Some(PatcherStatus::WaitingForGame) | None => {}
+                        Some(PatcherStatus::GameExited) => exited_t.store(true, Ordering::SeqCst),
+                        Some(_) => seen_t.store(true, Ordering::SeqCst),
+                    }
                     if let Some(status) = new_status {
                         if let Ok(mut s) = state_arc.lock() {
                             if s.patcher_gen == gen {
@@ -369,6 +401,12 @@ fn do_apply_skins_bg(
             s.patcher_stdin = None;
             s.patcher_pid = None;
         }
+    }
+
+    // Free the disk unless the game may still be running on the overlay
+    // (patcher stopped by hand while it was patched / in game).
+    if !game_seen.load(Ordering::SeqCst) || game_exited.load(Ordering::SeqCst) {
+        discard_patch_files(&base, &state, gen);
     }
 
     Ok(())

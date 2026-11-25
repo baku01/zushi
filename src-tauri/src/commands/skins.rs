@@ -246,6 +246,50 @@ pub async fn list_downloaded_skins(app: AppHandle) -> Result<Vec<DownloadedSkin>
     )
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteItem {
+    pub champion_name: String,
+    pub skin_name: String,
+}
+
+/// Removes one skin's folder, then its champion folder once nothing real is left.
+/// A listing running at the same time may drop a `.blob_sha` into the folder while
+/// it is being emptied, which makes `remove_dir_all` fail: retry a few times.
+fn delete_skin_dir(base: &std::path::Path, champion_name: &str, skin_name: &str) -> Result<(), String> {
+    let champion_dir = base.join(encode_path(champion_name));
+    let skin_dir = champion_dir.join(encode_path(skin_name));
+
+    let mut last_err = None;
+    for attempt in 0..4 {
+        if !skin_dir.exists() {
+            last_err = None;
+            break;
+        }
+        match fs::remove_dir_all(&skin_dir) {
+            Ok(()) => {
+                last_err = None;
+                break;
+            }
+            Err(e) => {
+                last_err = Some(e.to_string());
+                std::thread::sleep(std::time::Duration::from_millis(40 * (attempt + 1)));
+            }
+        }
+    }
+    if let Some(e) = last_err {
+        return Err(format!("Could not delete \"{skin_name}\": {e}"));
+    }
+
+    // Drop the champion folder when only Finder litter (.DS_Store) remains.
+    if let Ok(mut rest) = fs::read_dir(&champion_dir) {
+        if rest.all(|e| e.map(|e| e.file_name() == ".DS_Store").unwrap_or(false)) {
+            fs::remove_dir_all(&champion_dir).ok();
+        }
+    }
+    Ok(())
+}
+
 #[tauri::command]
 pub async fn delete_downloaded_skin(
     app: AppHandle,
@@ -254,26 +298,26 @@ pub async fn delete_downloaded_skin(
 ) -> Result<(), String> {
     let base = skins_dir(&app);
     flatten(
-        tauri::async_runtime::spawn_blocking(move || {
-            let skin_dir = base
-                .join(encode_path(&champion_name))
-                .join(encode_path(&skin_name));
-            if skin_dir.exists() {
-                fs::remove_dir_all(&skin_dir).map_err(|e| e.to_string())?;
-            }
+        tauri::async_runtime::spawn_blocking(move || delete_skin_dir(&base, &champion_name, &skin_name))
+            .await,
+    )
+}
 
-            let champion_dir = base.join(encode_path(&champion_name));
-            if champion_dir.exists() {
-                if champion_dir
-                    .read_dir()
-                    .map(|mut d| d.next().is_none())
-                    .unwrap_or(false)
-                {
-                    fs::remove_dir(&champion_dir).ok();
+/// Deletes several skins in one call (a skin with all its chromas/forms), so the
+/// UI needs a single round trip and a single refresh instead of one racing
+/// listing per skin.
+#[tauri::command]
+pub async fn delete_downloaded_skins(app: AppHandle, items: Vec<DeleteItem>) -> Result<(), String> {
+    let base = skins_dir(&app);
+    flatten(
+        tauri::async_runtime::spawn_blocking(move || {
+            let mut first_err = None;
+            for item in &items {
+                if let Err(e) = delete_skin_dir(&base, &item.champion_name, &item.skin_name) {
+                    first_err.get_or_insert(e);
                 }
             }
-
-            Ok(())
+            first_err.map_or(Ok(()), Err)
         })
         .await,
     )
@@ -336,5 +380,28 @@ mod tests {
         assert_eq!(blob_sha_of(&dir, &zip).as_deref(), Some(git_blob_sha(b"v2").as_str()));
 
         fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn delete_removes_skin_and_empty_champion_folder() {
+        let base = std::env::temp_dir().join(format!("zushi-delete-{}", std::process::id()));
+        let a = base.join("K%2FDA Kai'Sa").join("K%2FDA Kai'Sa");
+        let b = base.join("K%2FDA Kai'Sa").join("Prestige K%2FDA Kai'Sa");
+        for dir in [&a, &b] {
+            fs::create_dir_all(dir).unwrap();
+            fs::write(dir.join("skin.zip"), b"zip").unwrap();
+            fs::write(dir.join(BLOB_SHA_FILE), "x").unwrap();
+        }
+
+        delete_skin_dir(&base, "K/DA Kai'Sa", "K/DA Kai'Sa").unwrap();
+        assert!(!a.exists());
+        assert!(b.exists(), "the champion's other skin stays");
+
+        // Deleting what is already gone is not an error; the last skin takes the champion folder.
+        delete_skin_dir(&base, "K/DA Kai'Sa", "K/DA Kai'Sa").unwrap();
+        delete_skin_dir(&base, "K/DA Kai'Sa", "Prestige K/DA Kai'Sa").unwrap();
+        assert!(!base.join("K%2FDA Kai'Sa").exists());
+
+        fs::remove_dir_all(&base).ok();
     }
 }
