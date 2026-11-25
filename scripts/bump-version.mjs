@@ -46,7 +46,9 @@ replaceOnce("src-tauri/tauri.conf.json", /("version":\s*")[^"]+(")/, `$1${versio
 replaceOnce("package.json", /("version":\s*")[^"]+(")/, `$1${version}$2`);
 replaceOnce("src-tauri/Cargo.toml", /(\[package\]\nname = "zushi"\nversion = ")[^"]+(")/, `$1${version}$2`);
 replaceOnce("src-tauri/Cargo.lock", /(name = "zushi"\nversion = ")[^"]+(")/, `$1${version}$2`);
-replaceOnce("README.md", /(badge\/version-)[\d.]+(-)/, `$1${version}$2`);
+for (const readme of ["README.md", "README.en.md"]) {
+  replaceOnce(readme, /(badge\/version-)[\d.]+(-)/, `$1${version}$2`);
+}
 
 const lock = JSON.parse(read("package-lock.json"));
 lock.version = version;
