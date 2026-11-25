@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import {
   useChampions,
@@ -26,6 +27,77 @@ interface ChampionGridProps {
   onSkinTypeChange: (type: SkinType | null) => void;
 }
 
+interface ChampionTileProps {
+  champ: Champion;
+  name: string;
+  owned: number;
+  selected: boolean;
+  tooltip: string;
+  /** Data version: art URLs resolve once metadata loads, so a bump must re-render the tile. */
+  version: number;
+  onSelect: (champion: Champion) => void;
+}
+
+// Memoized: the grid has ~170 tiles and App re-renders on every download event or
+// patcher status change, which would otherwise rebuild all of them each time.
+const ChampionTile = memo(function ChampionTile({
+  champ,
+  name,
+  owned,
+  selected,
+  tooltip,
+  onSelect,
+}: ChampionTileProps) {
+  return (
+    <button
+      onClick={() => onSelect(champ)}
+      onMouseEnter={() => prefetchChampionSplashes(champ)}
+      className="group flex cursor-pointer flex-col items-center gap-1 rounded-md p-1.5 transition-transform duration-100 hover:bg-white/4 active:scale-[0.96]"
+      title={tooltip}
+    >
+      <div className="relative">
+        <div
+          className={[
+            "bg-charcoal-500 relative h-15 w-15 overflow-hidden rounded-sm border transition-colors duration-150",
+            selected ? "border-gold-400" : "border-charcoal-50/30 group-hover:border-gold-400/70",
+          ].join(" ")}
+        >
+          {/* The default skin's 380px tile: sharper than the 128px champion icon. */}
+          <ArtImage
+            srcs={[
+              skinTileUrlById(String(parseInt(champ.key, 10) * 1000)),
+              championAvatar(champ.id),
+            ]}
+            alt={name}
+            lazy
+            className="h-full w-full object-cover group-hover:scale-105"
+          />
+        </div>
+        {owned > 0 && (
+          <span
+            className={[
+              "absolute -right-1.5 -bottom-1.5 min-w-4.5 rounded-full border px-1 text-center text-[9.5px] leading-4 font-semibold tabular-nums",
+              selected
+                ? "bg-gold-400 text-charcoal-600 border-charcoal-400"
+                : "bg-charcoal-200 text-ink-secondary border-charcoal-400",
+            ].join(" ")}
+          >
+            {owned}
+          </span>
+        )}
+      </div>
+      <span
+        className={[
+          "w-full truncate text-center text-[10.5px] leading-tight transition-colors select-none",
+          selected ? "text-gold-300" : "text-ink-muted group-hover:text-gold-300",
+        ].join(" ")}
+      >
+        {name}
+      </span>
+    </button>
+  );
+});
+
 export default function ChampionGrid({
   onSelect,
   ownedCounts,
@@ -33,12 +105,14 @@ export default function ChampionGrid({
   skinType,
   onSkinTypeChange,
 }: ChampionGridProps) {
-  const { t } = useI18n();
+  const { t, version } = useI18n();
   const { champions: searched, total, loading, error, search, setSearch } = useChampions();
-  const types = championSkinTypes();
-  const champions = skinType
-    ? searched.filter((c) => (types.get(parseInt(c.key, 10))?.get(skinType) ?? 0) > 0)
-    : searched;
+  const champions = useMemo(() => {
+    if (!skinType) return searched;
+    const types = championSkinTypes();
+    return searched.filter((c) => (types.get(parseInt(c.key, 10))?.get(skinType) ?? 0) > 0);
+    // `version` bumps when skin metadata lands, which the type counts are built from.
+  }, [searched, skinType, version]);
 
   if (loading) {
     return (
@@ -106,56 +180,18 @@ export default function ChampionGrid({
               const name = championDisplayName(champ);
               const owned = ownedCounts.get(champ.name) ?? 0;
               const selected = selectedChampions.has(champ.name);
+              const tooltip = `${name}, ${championTitle(champ)}${owned ? `\n${t("grid.owned", { n: owned })}` : ""}${selected ? `\n${t("grid.selected")}` : ""}`;
               return (
-                <button
+                <ChampionTile
                   key={champ.key}
-                  onClick={() => onSelect(champ)}
-                  onMouseEnter={() => prefetchChampionSplashes(champ)}
-                  className="group flex cursor-pointer flex-col items-center gap-1 rounded-md p-1.5 transition-transform duration-100 active:scale-[0.96]"
-                  title={`${name}, ${championTitle(champ)}${owned ? `\n${t("grid.owned", { n: owned })}` : ""}${selected ? `\n${t("grid.selected")}` : ""}`}
-                >
-                  <div className="relative">
-                    <div
-                      className={[
-                        "bg-charcoal-500 relative h-15 w-15 overflow-hidden rounded-sm border transition-colors duration-150",
-                        selected
-                          ? "border-gold-400"
-                          : "border-charcoal-50/30 group-hover:border-gold-400/70",
-                      ].join(" ")}
-                    >
-                      {/* The default skin's 380px tile: sharper than the 128px champion icon. */}
-                      <ArtImage
-                        srcs={[
-                          skinTileUrlById(String(parseInt(champ.key, 10) * 1000)),
-                          championAvatar(champ.id),
-                        ]}
-                        alt={name}
-                        lazy
-                        className="h-full w-full object-cover group-hover:scale-105"
-                      />
-                    </div>
-                    {owned > 0 && (
-                      <span
-                        className={[
-                          "absolute -right-1.5 -bottom-1.5 min-w-4.5 rounded-full border px-1 text-center text-[9.5px] leading-4 font-semibold tabular-nums",
-                          selected
-                            ? "bg-gold-400 text-charcoal-600 border-charcoal-400"
-                            : "bg-charcoal-200 text-ink-secondary border-charcoal-400",
-                        ].join(" ")}
-                      >
-                        {owned}
-                      </span>
-                    )}
-                  </div>
-                  <span
-                    className={[
-                      "w-full truncate text-center text-[10.5px] leading-tight transition-colors select-none",
-                      selected ? "text-gold-300" : "text-ink-muted group-hover:text-gold-300",
-                    ].join(" ")}
-                  >
-                    {name}
-                  </span>
-                </button>
+                  champ={champ}
+                  name={name}
+                  owned={owned}
+                  selected={selected}
+                  tooltip={tooltip}
+                  version={version}
+                  onSelect={onSelect}
+                />
               );
             })}
           </div>

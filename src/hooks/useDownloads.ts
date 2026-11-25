@@ -4,8 +4,7 @@ import {
   listDownloadedSkins,
   downloadSkin as downloadSkinCmd,
   downloadMultipleSkins,
-  deleteDownloadedSkin as deleteCmd,
-  getSkinsDirSize,
+  deleteDownloadedSkins as deleteCmd,
   clearAllSkins as clearAllCmd,
 } from "../lib/commands";
 import type { DownloadedSkin } from "../types";
@@ -22,32 +21,37 @@ interface DownloadProgress {
   skinName: string;
 }
 
+export interface SkinRef {
+  championName: string;
+  skinName: string;
+}
+
 export function useDownloads() {
   const [downloads, setDownloads] = useState<DownloadedSkin[]>([]);
+  // False until the first listing lands, so nothing treats "not loaded yet" as "empty".
+  const [ready, setReady] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [cacheSize, setCacheSize] = useState(0);
   const busy = useRef(false);
+  // Listings run concurrently on the backend and can finish out of order: only the
+  // latest request may write state, or a stale list brings deleted skins back.
+  const listSeq = useRef(0);
 
-  const refreshSize = useCallback(async () => {
+  const refresh = useCallback(async () => {
+    const seq = ++listSeq.current;
     try {
-      const size = await getSkinsDirSize();
-      setCacheSize(size);
+      const list = await listDownloadedSkins();
+      if (seq === listSeq.current) {
+        setDownloads(list);
+        setReady(true);
+      }
     } catch {
-      // ignore
+      // Keep the last known list; `ready` stays false until a listing really succeeds.
     }
   }, []);
 
-  const refresh = useCallback(async () => {
-    try {
-      const list = await listDownloadedSkins();
-      setDownloads(list);
-    } catch {}
-    await refreshSize();
-  }, [refreshSize]);
-
   useEffect(() => {
-    refresh();
+    void refresh();
   }, [refresh]);
 
   const isDownloaded = useCallback(
@@ -103,15 +107,26 @@ export function useDownloads() {
     [refresh]
   );
 
-  const deleteSkin = useCallback(
-    async (championName: string, skinName: string) => {
+  /**
+   * Deletes skins: they leave the list at once and the disk catches up behind it.
+   * One backend call and one listing, however many skins; on failure the listing
+   * restores whatever is really still there.
+   */
+  const deleteSkins = useCallback(
+    async (items: SkinRef[]): Promise<boolean> => {
+      if (items.length === 0) return false;
       setError(null);
+      const gone = new Set(items.map((i) => `${i.championName}\u0000${i.skinName}`));
+      setDownloads((prev) => prev.filter((d) => !gone.has(`${d.champion_name}\u0000${d.skin_name}`)));
+      let ok = true;
       try {
-        await deleteCmd(championName, skinName);
-        await refresh();
+        await deleteCmd(items);
       } catch (err) {
+        ok = false;
         setError(String(err));
       }
+      await refresh();
+      return ok;
     },
     [refresh]
   );
@@ -120,23 +135,23 @@ export function useDownloads() {
     setError(null);
     try {
       await clearAllCmd();
-      await refresh();
     } catch (err) {
       setError(String(err));
     }
+    await refresh();
   }, [refresh]);
 
   const clearError = useCallback(() => setError(null), []);
 
   return {
     downloads,
+    ready,
     downloading,
     error,
-    cacheSize,
     isDownloaded,
     download,
     downloadMultiple,
-    deleteSkin,
+    deleteSkins,
     clearAll,
     clearError,
     refresh,

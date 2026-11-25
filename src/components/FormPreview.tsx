@@ -1,7 +1,7 @@
 /** A form's picture shown large over a skin's splash, with its name. */
 export function FormPreview({ icon, label }: { icon: string | null; label: string }) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 bg-black/60 backdrop-blur-[2px]">
+    <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 bg-black/60">
       {icon && (
         <img
           src={icon}

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { Layers, Check, Info, X, Search, RefreshCw } from "lucide-react";
+import { memo, useState, useEffect, useMemo, useCallback, type Dispatch, type SetStateAction } from "react";
+import { Layers, Check, Info, X, Search, RefreshCw, Trash2 } from "lucide-react";
 import { splashUrl, findChampionByName, championAvatar } from "../hooks/useChampions";
 import {
   lookupSplashNum,
@@ -19,6 +19,7 @@ import ArtImage from "./ArtImage";
 import { FormPreview, FormThumb } from "./FormPreview";
 import { formIcon } from "../lib/forms";
 import type { DownloadedSkin } from "../types";
+import type { SkinRef } from "../hooks/useDownloads";
 import type { FormInfo } from "../lib/forms";
 
 function useChromaReady(): boolean {
@@ -52,8 +53,9 @@ interface MySkinsProps {
   downloads: DownloadedSkin[];
   patcherActive: boolean;
   selection: Selection;
-  onSelectionChange: (selection: Selection) => void;
-  onDelete: (championName: string, skinName: string) => Promise<void>;
+  onSelectionChange: Dispatch<SetStateAction<Selection>>;
+  /** Removes skins from disk; the list updates at once and the selection is pruned by the app. */
+  onDelete: (items: SkinRef[]) => Promise<void>;
   outdatedKeys: Set<string>; // skinKey()s republished upstream since download
   updateCount: number;
   updating: boolean;
@@ -123,36 +125,30 @@ export default function MySkins({
   const { t, lang, version } = useI18n();
   const chromaReady = useChromaReady(); // re-render once Community Dragon chroma data lands
 
-  const toggleSkin = (championName: string, skinName: string) => {
-    if (patcherActive) return;
-    if (selection[championName] === skinName) {
-      const next = { ...selection };
-      delete next[championName];
-      onSelectionChange(next);
-    } else {
-      onSelectionChange({ ...selection, [championName]: skinName });
-    }
-  };
+  // Stable identities (functional updates, no captured `selection`) so the memoized
+  // rows and tiles below don't re-render every time the selection or search changes.
+  const toggleSkin = useCallback(
+    (championName: string, skinName: string) => {
+      if (patcherActive) return;
+      onSelectionChange((prev) => {
+        if (prev[championName] === skinName) {
+          const next = { ...prev };
+          delete next[championName];
+          return next;
+        }
+        return { ...prev, [championName]: skinName };
+      });
+    },
+    [patcherActive, onSelectionChange]
+  );
 
-  const handleDelete = async (championName: string, skinName: string) => {
-    if (patcherActive) return;
-    if (selection[championName] === skinName) {
-      const next = { ...selection };
-      delete next[championName];
-      onSelectionChange(next);
-    }
-    await onDelete(championName, skinName);
-  };
-
-  const handleDeleteGroup = async (championName: string, skinNames: string[]) => {
-    if (patcherActive || skinNames.length === 0) return;
-    if (skinNames.includes(selection[championName])) {
-      const next = { ...selection };
-      delete next[championName];
-      onSelectionChange(next);
-    }
-    await Promise.all(skinNames.map((n) => onDelete(championName, n)));
-  };
+  const deleteSkins = useCallback(
+    (championName: string, skinNames: string[]) => {
+      if (patcherActive || skinNames.length === 0) return;
+      void onDelete(skinNames.map((skinName) => ({ championName, skinName })));
+    },
+    [patcherActive, onDelete]
+  );
 
   const selectedCount = Object.keys(selection).length;
   const [search, setSearch] = useState("");
@@ -312,48 +308,79 @@ export default function MySkins({
               {t("my.noMatch", { q: search })}
             </div>
           )}
-          {filteredEntries.map(([champion, groups, displayChampion]) => {
-            const selectedSkin = selection[champion];
-            return (
-              <div
-                key={champion}
-                className="border-border flex items-start gap-4 border-b px-4 py-3"
-              >
-                <div className="flex w-36 shrink-0 items-center gap-2.5 pt-0.5">
-                  <ChampAvatar championName={champion} />
-                  <div className="min-w-0">
-                    <p className="text-ink truncate text-sm font-medium">{displayChampion}</p>
-                    <p className="text-ink-muted truncate text-[11px]">
-                      {t("my.skins", { n: groups.length })}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-wrap gap-3">
-                  {groups.map((group) => (
-                    <SkinTile
-                      key={group.baseSkinName}
-                      champion={champion}
-                      group={group}
-                      selectedSkin={selectedSkin}
-                      patcherActive={patcherActive}
-                      outdatedKeys={outdatedKeys}
-                      onToggle={toggleSkin}
-                      onDelete={handleDelete}
-                      onDeleteGroup={handleDeleteGroup}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          {filteredEntries.map(([champion, groups, displayChampion]) => (
+            <ChampionRow
+              key={champion}
+              champion={champion}
+              groups={groups}
+              displayName={displayChampion}
+              selectedSkin={selection[champion]}
+              patcherActive={patcherActive}
+              outdatedKeys={outdatedKeys}
+              version={version}
+              onToggle={toggleSkin}
+              onDelete={deleteSkins}
+            />
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-function SkinTile({
+const ChampionRow = memo(function ChampionRow({
+  champion,
+  groups,
+  displayName,
+  selectedSkin,
+  patcherActive,
+  outdatedKeys,
+  onToggle,
+  onDelete,
+}: {
+  champion: string;
+  groups: DownloadGroup[];
+  displayName: string;
+  selectedSkin: string | undefined;
+  patcherActive: boolean;
+  outdatedKeys: Set<string>;
+  /** Data version: names and art resolve as metadata loads, so a bump must re-render. */
+  version: number;
+  onToggle: (championName: string, skinName: string) => void;
+  onDelete: (championName: string, skinNames: string[]) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="border-border cv-auto flex items-start gap-4 border-b px-4 py-3">
+      <div className="flex w-36 shrink-0 items-center gap-2.5 pt-0.5">
+        <ChampAvatar championName={champion} />
+        <div className="min-w-0">
+          <p className="text-ink truncate text-sm font-medium">{displayName}</p>
+          <p className="text-ink-muted truncate text-[11px]">
+            {t("my.skins", { n: groups.length })}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-wrap gap-3">
+        {groups.map((group) => (
+          <SkinTile
+            key={group.baseSkinName}
+            champion={champion}
+            group={group}
+            selectedSkin={selectedSkin}
+            patcherActive={patcherActive}
+            outdatedKeys={outdatedKeys}
+            onToggle={onToggle}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+    </div>
+  );
+});
+
+const SkinTile = memo(function SkinTile({
   champion,
   group,
   selectedSkin,
@@ -361,7 +388,6 @@ function SkinTile({
   outdatedKeys,
   onToggle,
   onDelete,
-  onDeleteGroup,
 }: {
   champion: string;
   group: DownloadGroup;
@@ -369,10 +395,16 @@ function SkinTile({
   patcherActive: boolean;
   outdatedKeys: Set<string>;
   onToggle: (championName: string, skinName: string) => void;
-  onDelete: (championName: string, skinName: string) => void;
-  onDeleteGroup: (championName: string, skinNames: string[]) => void;
+  onDelete: (championName: string, skinNames: string[]) => void;
 }) {
   const { t } = useI18n();
+  // Deleting a skin together with its chromas/forms asks for a second click.
+  const [confirming, setConfirming] = useState(false);
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = setTimeout(() => setConfirming(false), 3000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
   // Form whose picture shows over the thumbnail while its button is hovered.
   const [preview, setPreview] = useState<{ icon: string | null; label: string } | null>(null);
   const hover = (icon: string | null, label: string) => ({
@@ -426,7 +458,7 @@ function SkinTile({
           }
           disabled={!baseClickable}
           className={[
-            "relative block aspect-video w-full overflow-hidden rounded transition-all",
+            "relative block aspect-video w-full overflow-hidden rounded transition-shadow duration-150",
             patcherActive
               ? "cursor-default opacity-50"
               : group.base
@@ -495,11 +527,32 @@ function SkinTile({
 
         {!patcherActive && allNames.length > 0 && (
           <button
-            onClick={() => onDeleteGroup(champion, allNames)}
-            className="bg-charcoal-500/90 hover:bg-error text-ink-muted absolute top-1 left-1 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full opacity-0 shadow transition-all group-hover/card:opacity-100 hover:text-white"
+            onClick={() => {
+              if (allNames.length > 1 && !confirming) {
+                setConfirming(true);
+                return;
+              }
+              setConfirming(false);
+              onDelete(champion, allNames);
+            }}
+            onMouseLeave={() => setConfirming(false)}
+            className={[
+              "absolute top-1 left-1 z-10 flex h-6 cursor-pointer items-center justify-center gap-1 rounded-full text-white shadow-md transition-[opacity,background-color,width] duration-150",
+              confirming
+                ? "bg-error px-2 text-[10px] font-semibold opacity-100"
+                : "bg-charcoal-600/85 text-ink-secondary hover:bg-error w-6 opacity-0 group-focus-within/card:opacity-100 group-hover/card:opacity-100 hover:text-white",
+            ].join(" ")}
             title={hasVariants ? t("my.deleteGroup") : t("my.delete")}
+            aria-label={hasVariants ? t("my.deleteGroup") : t("my.delete")}
           >
-            <X size={10} strokeWidth={2.5} />
+            {confirming ? (
+              <>
+                <Trash2 size={11} strokeWidth={2.5} />
+                {t("my.deleteConfirm", { n: allNames.length })}
+              </>
+            ) : (
+              <X size={12} strokeWidth={2.5} />
+            )}
           </button>
         )}
       </div>
@@ -533,7 +586,7 @@ function SkinTile({
                   onClick={() => onToggle(f.dl.champion_name, f.dl.skin_name)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    onDelete(f.dl.champion_name, f.dl.skin_name);
+                    onDelete(f.dl.champion_name, [f.dl.skin_name]);
                   }}
                   disabled={patcherActive}
                   title={`${downloadedDisplayName(f.dl.champion_name, f.dl.skin_name)}\n(${t("my.rightClickDelete")})`}
@@ -558,12 +611,12 @@ function SkinTile({
                 onClick={() => onToggle(c.dl.champion_name, c.dl.skin_name)}
                 onContextMenu={(e) => {
                   e.preventDefault();
-                  onDelete(c.dl.champion_name, c.dl.skin_name);
+                  onDelete(c.dl.champion_name, [c.dl.skin_name]);
                 }}
                 disabled={patcherActive}
                 title={`${downloadedDisplayName(c.dl.champion_name, c.dl.skin_name)}\n(${t("my.rightClickDelete")})`}
                 className={[
-                  "ring-offset-charcoal-400 relative h-4 w-4 shrink-0 rounded-sm transition-all",
+                  "ring-offset-charcoal-400 relative h-4 w-4 shrink-0 rounded-sm transition-shadow",
                   patcherActive ? "cursor-default opacity-50" : "cursor-pointer",
                   isSel
                     ? "ring-gold-400 ring-2 ring-offset-1"
@@ -585,4 +638,4 @@ function SkinTile({
       )}
     </div>
   );
-}
+});

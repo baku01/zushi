@@ -29,6 +29,7 @@ import Settings from "./components/Settings";
 import Toast from "./components/Toast";
 import UpdateBanner from "./components/UpdateBanner";
 import type { Champion } from "./types";
+import type { SkinRef } from "./hooks/useDownloads";
 import logo from "./assets/icon.png";
 
 type View = "champions" | "my-skins" | "customs" | "settings";
@@ -60,7 +61,13 @@ function App() {
     return {};
   });
   const [appVersion, setAppVersion] = useState("");
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; variant: "error" | "success" } | null>(
+    null
+  );
+  const setToastMessage = useCallback(
+    (message: string | null) => setToast(message ? { message, variant: "error" } : null),
+    []
+  );
 
   useEffect(() => {
     getVersion()
@@ -99,12 +106,12 @@ function App() {
   // Surface patcher errors as toast
   useEffect(() => {
     if (patcher.error) setToastMessage(patcher.error);
-  }, [patcher.error]);
+  }, [patcher.error, setToastMessage]);
 
   // Surface customs errors as toast
   useEffect(() => {
     if (customs.error) setToastMessage(customs.error);
-  }, [customs.error]);
+  }, [customs.error, setToastMessage]);
 
   function handleNavClick(id: View): void {
     setView(id);
@@ -126,6 +133,27 @@ function App() {
   useEffect(() => {
     localStorage.setItem("zushi_skin_selection", JSON.stringify(skinSelection));
   }, [skinSelection]);
+
+  // A selected skin that is no longer on disk (deleted here, or removed outside the app)
+  // must not stay selected: it would be silently skipped when applying.
+  useEffect(() => {
+    if (!dl.ready) return;
+    const owned = new Set(dl.downloads.map((d) => `${d.champion_name}\u0000${d.skin_name}`));
+    setSkinSelection((prev) => {
+      const kept = Object.entries(prev).filter(([c, s]) => owned.has(`${c}\u0000${s}`));
+      return kept.length === Object.keys(prev).length ? prev : Object.fromEntries(kept);
+    });
+  }, [dl.ready, dl.downloads]);
+
+  const { deleteSkins } = dl;
+  const handleDelete = useCallback(
+    async (items: SkinRef[]) => {
+      if (await deleteSkins(items)) {
+        setToast({ message: t("my.deleted", { n: items.length }), variant: "success" });
+      }
+    },
+    [deleteSkins, t]
+  );
 
   const skinCount = Object.keys(skinSelection).length;
 
@@ -173,7 +201,7 @@ function App() {
           patcherActive={patcher.isActive}
           selection={skinSelection}
           onSelectionChange={setSkinSelection}
-          onDelete={dl.deleteSkin}
+          onDelete={handleDelete}
           outdatedKeys={skinUpdates.outdatedKeys}
           updateCount={skinUpdates.outdated.length}
           updating={skinUpdates.updating || dl.downloading !== null}
@@ -292,7 +320,14 @@ function App() {
       </aside>
 
       <div className="bg-charcoal-400 flex min-w-0 flex-1 flex-col border-l border-black/50 shadow-[-1px_0_0_rgba(255,255,255,0.04)]">
-        <main className="flex flex-1 flex-col overflow-hidden">{renderContent()}</main>
+        <main className="flex flex-1 flex-col overflow-hidden">
+          <div
+            key={`${view}:${selectedChampion?.id ?? ""}`}
+            className="animate-view-in flex min-h-0 flex-1 flex-col"
+          >
+            {renderContent()}
+          </div>
+        </main>
 
         <DownloadBar downloading={dl.downloading} />
 
@@ -305,12 +340,13 @@ function App() {
         />
       </div>
 
-      {(toastMessage || dl.error) && (
+      {(toast || dl.error) && (
         <Toast
-          key={toastMessage ?? dl.error ?? ""}
-          message={toastMessage ?? dl.error ?? ""}
+          key={toast?.message ?? dl.error ?? ""}
+          message={toast?.message ?? dl.error ?? ""}
+          variant={toast?.variant ?? "error"}
           onClose={() => {
-            setToastMessage(null);
+            setToast(null);
             dl.clearError();
             customs.clearError();
           }}

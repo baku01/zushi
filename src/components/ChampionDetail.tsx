@@ -212,7 +212,7 @@ function SkinCard({
           ) : baseState.available && !busy ? (
             <button
               onClick={() => onDownloadGroup(group)}
-              className="bg-charcoal-600/75 hover:bg-gold-400 hover:text-charcoal-600 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white shadow-lg backdrop-blur-sm transition-colors"
+              className="bg-charcoal-600/85 hover:bg-gold-400 hover:text-charcoal-600 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white shadow-lg transition-colors"
               title={
                 variants.length > 1
                   ? `${t("detail.downloadGroup")} (${variants.length})`
@@ -225,7 +225,7 @@ function SkinCard({
         </div>
 
         {downloadedCount > 0 && !allDownloaded && (
-          <span className="bg-charcoal-600/80 text-success absolute top-2 left-2 rounded-full px-1.5 text-[10px] leading-5 font-medium tabular-nums backdrop-blur-sm">
+          <span className="bg-charcoal-600/90 text-success absolute top-2 left-2 rounded-full px-1.5 text-[10px] leading-5 font-medium tabular-nums">
             {downloadedCount}/{variants.length}
           </span>
         )}
@@ -462,7 +462,7 @@ export default function ChampionDetail({
                 key={i}
                 className="bg-charcoal-500 border-charcoal-50/10 overflow-hidden rounded-md border"
               >
-                <div className="from-charcoal-600 via-charcoal-400 to-charcoal-600 animate-shimmer aspect-video bg-linear-to-r bg-size-[200%_100%]" />
+                <div className="bg-charcoal-600 aspect-video animate-pulse" />
                 <div className="space-y-2 px-3 py-3">
                   <div className="bg-charcoal-300 h-2.5 w-3/4 rounded-sm" />
                   <div className="bg-charcoal-300 h-2 w-1/3 rounded-sm" />
