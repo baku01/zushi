@@ -6062,7 +6062,7 @@ dependencies = [
 
 [[package]]
 name = "zushi"
-version = "0.1.23"
+version = "0.1.24"
 dependencies = [
  "libc",
  "ltk_modpkg",
