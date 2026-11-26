@@ -26,7 +26,8 @@ fn work_dir(app: &AppHandle) -> PathBuf {
 }
 
 /// The overlay holds a full rewritten copy of every patched champion's WAD
-/// (tens of MB each), and `installed` the unpacked skins it was built from.
+/// (tens of MB each) plus APFS clones of the map WADs a skin touches, and
+/// `installed` the unpacked skins it was built from.
 /// Neither is needed once the game that used them has closed.
 fn discard_patch_files(base: &std::path::Path, state: &Arc<Mutex<AppState>>, gen: u64) {
     // Under the setup lock a newer apply can't be rebuilding these folders, and once

@@ -116,5 +116,11 @@ namespace lol::wad {
 
         Map entries;
         TOC::Signature signature{};
+        //! The game WAD this archive was read from, empty for mods. Only ever opened read-only:
+        //! write_to_file clones it (APFS copy-on-write) instead of copying it when it can.
+        fs::path source_path{};
+
+    private:
+        auto write_cloned(fs::path const& path, TOC::latest_header_t const& header) const -> bool;
     };
 }

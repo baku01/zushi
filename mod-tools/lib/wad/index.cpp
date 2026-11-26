@@ -83,6 +83,19 @@ auto Index::write_to_directory(fs::path const& dir) const -> void {
     for (auto const& [mount_name, mounted] : mounts) {
         logi("Writing wad: {}", mounted.relpath);
         auto const& [relpath, archive] = mounted;
+        // A game WAD reached through a symlink gets a relpath climbing out of the game folder
+        // (fs::relative resolves links), which would aim this write at the game's own files.
+        auto const escapes = relpath.is_absolute() || std::any_of(relpath.begin(), relpath.end(), [](auto const& part) {
+                                 return part == "..";
+                             });
+        lol_throw_if_msg(escapes, "Refusing to write a wad outside the overlay: {}", relpath);
+        // Nor may a linked folder inside the overlay lead there: where the wad lands, links
+        // resolved, has to be under the overlay itself. (Root ignores file permissions, so
+        // nothing else would stop a write into the game's files.)
+        auto const root = fs::canonical(dir);
+        auto const lands = fs::weakly_canonical((dir / relpath).parent_path());
+        auto const inside = std::mismatch(root.begin(), root.end(), lands.begin(), lands.end()).first == root.end();
+        lol_throw_if_msg(!inside, "Refusing to write a wad outside the overlay: {} -> {}", relpath, lands);
         archive.write_to_file(dir / relpath);
     }
 }
