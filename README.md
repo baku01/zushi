@@ -104,7 +104,7 @@ Depois disso o Zushi se atualiza sozinho: quando sair uma versão nova, clique e
 | Mods personalizados | `~/Library/Application Support/com.zushi.app/customs` | o tamanho do arquivo importado |
 | Dados do patcher (overlay) | `~/Library/Application Support/com.zushi.app/overlay` | **~60 MB por campeão aplicado** |
 
-O overlay contém uma cópia completa do arquivo do campeão (WAD) com a skin embutida, por isso ele é grande. O Zushi **apaga o overlay automaticamente** quando o League fecha, ou se o patcher terminar sem ter encontrado o jogo. Ele só é mantido enquanto o jogo ainda pode estar lendo dele, por exemplo se você parar o patcher à mão durante a partida. Você também pode limpar tudo em **Configurações → Armazenamento**.
+O overlay contém uma cópia completa do arquivo do campeão (WAD) com a skin embutida, por isso ele é grande. Os WADs de mapa que algumas skins também alteram (Shaco, Anivia…) são **clones APFS** dos arquivos do jogo: mesmo aparecendo com gigabytes, ocupam no disco só os bytes da skin, e os arquivos do jogo nunca são modificados. O Zushi **apaga o overlay automaticamente** quando o League fecha, ou se o patcher terminar sem ter encontrado o jogo. Ele só é mantido enquanto o jogo ainda pode estar lendo dele, por exemplo se você parar o patcher à mão durante a partida. Você também pode limpar tudo em **Configurações → Armazenamento**.
 
 ## Problemas comuns
 

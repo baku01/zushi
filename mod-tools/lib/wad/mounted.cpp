@@ -81,6 +81,10 @@ auto Mounted::read_from_game_file(fs::path const& path, fs::path const& game_pat
     }
     archive = Archive::read_from_toc(src, toc);
     archive.mark_optimal();
+    // The real file, links resolved: that is what gets cloned (a clone of a link is a link).
+    std::error_code ec = {};
+    archive.source_path = fs::canonical(path, ec);
+    if (ec) archive.source_path = fs::absolute(path);
     return nullptr;
 }
 

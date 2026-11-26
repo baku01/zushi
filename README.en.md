@@ -104,7 +104,7 @@ After that, Zushi updates itself: when a new version is out, click **Update & re
 | Custom mods | `~/Library/Application Support/com.zushi.app/customs` | the imported file's size |
 | Patcher data (overlay) | `~/Library/Application Support/com.zushi.app/overlay` | **~60 MB per applied champion** |
 
-The overlay holds a complete copy of the champion's game file (WAD) with the skin merged in, which is why it is large. Zushi **deletes the overlay automatically** when League closes, or if the patcher ends without ever finding the game. It is only kept while the game may still be reading from it, for example if you stop the patcher by hand mid-match. You can also clear everything in **Settings → Storage**.
+The overlay holds a complete copy of the champion's game file (WAD) with the skin merged in, which is why it is large. Map WADs that some skins also touch (Shaco, Anivia...) are **APFS clones** of the game's files: they show up as gigabytes but only take the skin's bytes on disk, and the game's own files are never modified. Zushi **deletes the overlay automatically** when League closes, or if the patcher ends without ever finding the game. It is only kept while the game may still be reading from it, for example if you stop the patcher by hand mid-match. You can also clear everything in **Settings → Storage**.
 
 ## Troubleshooting
 
