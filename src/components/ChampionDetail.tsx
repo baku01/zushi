@@ -432,6 +432,18 @@ export default function ChampionDetail({
             </span>
           )}
 
+          {!loading && groups.length > 0 && typeCounts.size > 0 && (
+            <SkinTypeChips
+              value={activeType}
+              onChange={onSkinTypeChange}
+              allLabel={t("detail.allSkins")}
+              counts={typeCounts}
+              hideEmpty
+              total={groups.length}
+              align="right"
+            />
+          )}
+
           {!loading && skins.length > 0 && !allDownloaded && (
             <button
               onClick={() => download(notDownloaded)}
@@ -444,18 +456,6 @@ export default function ChampionDetail({
           )}
         </div>
       </div>
-
-      {!loading && groups.length > 0 && typeCounts.size > 0 && (
-        <div className="border-border shrink-0 border-b px-4 py-2">
-          <SkinTypeChips
-            value={activeType}
-            onChange={onSkinTypeChange}
-            allLabel={t("detail.allSkins")}
-            counts={typeCounts}
-            total={groups.length}
-          />
-        </div>
-      )}
 
       {hasForms && !loading && (!activeType || activeType === "forms") && (
         <div className="border-gold-400/15 bg-gold-400/[0.06] mx-4 mt-3 flex items-center gap-2.5 rounded-[10px] border px-3 py-2">

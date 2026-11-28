@@ -10,6 +10,7 @@ import {
   championSkinTypes,
   skinTileUrlById,
   prefetchChampionSplashes,
+  SKIN_TYPES,
   type SkinType,
 } from "../hooks/useSkinData";
 import ArtImage from "./ArtImage";
@@ -119,6 +120,22 @@ export default function ChampionGrid({
     // `version` bumps when skin metadata lands, which the type counts are built from.
   }, [searched, skinType, version]);
 
+  const typeCounts = useMemo(() => {
+    void version;
+    const types = championSkinTypes();
+    if (types.size === 0) return undefined;
+    const counts = new Map<SkinType, number>();
+    for (const type of SKIN_TYPES) counts.set(type, 0);
+    for (const c of searched) {
+      const m = types.get(parseInt(c.key, 10));
+      if (!m) continue;
+      for (const type of SKIN_TYPES) {
+        if ((m.get(type) ?? 0) > 0) counts.set(type, (counts.get(type) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [searched, version]);
+
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
@@ -144,7 +161,7 @@ export default function ChampionGrid({
         data-tauri-drag-region
         className="border-border flex h-[52px] shrink-0 items-center gap-3 border-b px-4"
       >
-        <div className="relative w-52 shrink-0">
+        <div className="relative w-64 shrink-0">
           <Search
             size={13.5}
             strokeWidth={1.75}
@@ -170,10 +187,16 @@ export default function ChampionGrid({
           )}
         </div>
 
-        <SkinTypeChips value={skinType} onChange={onSkinTypeChange} allLabel={t("grid.all")} />
+        <SkinTypeChips
+          value={skinType}
+          onChange={onSkinTypeChange}
+          allLabel={t("grid.all")}
+          counts={typeCounts}
+          total={searched.length}
+        />
 
         {filtering && (
-          <span className="text-ink-muted ml-auto shrink-0 text-[11px] tabular-nums select-none">
+          <span className="text-ink-muted ml-auto shrink-0 text-xs tabular-nums select-none">
             {champions.length} / {total}
           </span>
         )}
