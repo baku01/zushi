@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/plataforma-macOS-black" alt="Plataforma" />
   <img src="https://img.shields.io/badge/tauri-2-24C8D8" alt="Tauri" />
   <img src="https://img.shields.io/badge/react-19-61DAFB" alt="React" />
-  <img src="https://img.shields.io/badge/version-0.1.25-c89b3c?label=versão" alt="Versão" />
+  <img src="https://img.shields.io/badge/version-0.1.26-c89b3c?label=versão" alt="Versão" />
 </p>
 
 <p align="center">
