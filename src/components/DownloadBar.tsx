@@ -28,16 +28,16 @@ export default function DownloadBar({ downloading }: DownloadBarProps) {
   const pct = progress ? Math.round((progress.current / progress.total) * 100) : null;
 
   return (
-    <div className="border-border bg-charcoal-500 relative flex items-center gap-3 border-t px-4 py-2">
-      <Loader2 size={14} className="text-gold-400 shrink-0 animate-spin" />
-      <span className="text-ink truncate text-sm font-medium">{label}</span>
+    <div className="bg-charcoal-500/85 relative flex items-center gap-2.5 border-t border-white/[0.07] px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <Loader2 size={13.5} className="text-gold-400 shrink-0 animate-spin" />
+      <span className="text-ink truncate text-[12.5px] font-medium">{label}</span>
       {progress && (
         <span className="text-ink-muted ml-auto shrink-0 text-xs tabular-nums select-none">
           {progress.current}/{progress.total}
         </span>
       )}
       {pct !== null && (
-        <div className="bg-charcoal-300 absolute inset-x-0 bottom-0 h-0.5">
+        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-white/[0.06]">
           <div
             className="bg-gold-400 h-full transition-all duration-300"
             style={{ width: `${pct}%` }}

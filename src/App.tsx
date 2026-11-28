@@ -167,18 +167,16 @@ function App() {
   function renderContent() {
     if (view === "settings") {
       return (
-        <div className="flex-1 overflow-y-auto">
-          <Settings
-            gamePath={gamePath}
-            onPathChange={selectPath}
-            patcherActive={patcher.isActive}
-            onSkinsCleared={async () => {
-              setSkinSelection({});
-              await dl.refresh();
-            }}
-            onCustomsCleared={customs.refresh}
-          />
-        </div>
+        <Settings
+          gamePath={gamePath}
+          onPathChange={selectPath}
+          patcherActive={patcher.isActive}
+          onSkinsCleared={async () => {
+            setSkinSelection({});
+            await dl.refresh();
+          }}
+          onCustomsCleared={customs.refresh}
+        />
       );
     }
 
@@ -258,24 +256,31 @@ function App() {
                 key={id}
                 onClick={() => handleNavClick(id)}
                 className={[
-                  "flex cursor-default items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors",
-                  active ? "bg-white/10 text-ink font-medium" : "text-ink/85 hover:bg-white/5",
+                  "flex cursor-default items-center gap-2.5 rounded-[7px] px-2.5 py-[7px] text-[13px] transition-colors",
+                  active
+                    ? "bg-white/[0.11] text-ink font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                    : "text-ink/80 hover:bg-white/[0.06] hover:text-ink",
                 ].join(" ")}
               >
                 <Icon
-                  size={16}
+                  size={15.5}
                   strokeWidth={active ? 2 : 1.75}
                   className={active ? "text-gold-400" : "text-gold-400/70"}
                 />
                 {t(label)}
                 {id === "my-skins" && skinUpdates.outdated.length === 0 && dl.downloads.length > 0 && (
-                  <span className="text-ink-muted ml-auto text-[11px] tabular-nums">
+                  <span
+                    className={[
+                      "ml-auto text-[11px] tabular-nums",
+                      active ? "text-ink-secondary" : "text-ink-muted",
+                    ].join(" ")}
+                  >
                     {dl.downloads.length}
                   </span>
                 )}
                 {id === "my-skins" && skinUpdates.outdated.length > 0 && (
                   <span
-                    className="bg-gold-400/15 text-gold-400 ml-auto rounded-full px-1.5 text-[10px] leading-4 font-medium tabular-nums"
+                    className="bg-gold-400/18 text-gold-300 border-gold-400/25 ml-auto rounded-full border px-1.5 text-[10px] leading-4 font-medium tabular-nums"
                     title={t("nav.updates", { n: skinUpdates.outdated.length })}
                   >
                     {skinUpdates.outdated.length}
@@ -287,14 +292,15 @@ function App() {
         </nav>
 
         <div className="mt-auto">
+          <div className="mx-3 mb-2 border-t border-white/[0.06]" />
           <button
             onClick={() =>
               invoke("open_url", { url: "https://github.com/Mouadzz/zushi" }).catch(() => {})
             }
-            className="text-ink-secondary hover:text-ink mx-2.5 mb-1 flex w-[calc(100%-1.25rem)] cursor-default items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] transition-colors hover:bg-white/5"
+            className="text-ink-secondary hover:text-ink mx-2.5 mb-1 flex w-[calc(100%-1.25rem)] cursor-default items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[12.5px] transition-colors hover:bg-white/[0.06]"
           >
             <Star
-              size={16}
+              size={14.5}
               strokeWidth={1.5}
               fill="currentColor"
               className="text-gold-400 shrink-0"
@@ -312,14 +318,16 @@ function App() {
               onInstall={update.install}
             />
           ) : (
-            <div className="px-4 pb-4 select-none">
-              <span className="text-ink-muted text-xs">{appVersion ? `v${appVersion}` : ""}</span>
+            <div className="px-4 pb-3.5 select-none">
+              <span className="text-ink-muted text-[11px] tabular-nums">
+                {appVersion ? `v${appVersion}` : ""}
+              </span>
             </div>
           )}
         </div>
       </aside>
 
-      <div className="bg-charcoal-400 flex min-w-0 flex-1 flex-col border-l border-black/50 shadow-[-1px_0_0_rgba(255,255,255,0.04)]">
+      <div className="bg-charcoal-400 flex min-w-0 flex-1 flex-col border-l border-black/60 shadow-[-1px_0_0_rgba(255,255,255,0.05)]">
         <main className="flex flex-1 flex-col overflow-hidden">
           <div
             key={`${view}:${selectedChampion?.id ?? ""}`}

@@ -52,14 +52,16 @@ const ChampionTile = memo(function ChampionTile({
     <button
       onClick={() => onSelect(champ)}
       onMouseEnter={() => prefetchChampionSplashes(champ)}
-      className="group flex cursor-pointer flex-col items-center gap-1 rounded-md p-1.5 transition-transform duration-100 hover:bg-white/4 active:scale-[0.96]"
+      className="group flex cursor-pointer flex-col items-center gap-1.5 rounded-[10px] p-1.5 transition-[background-color,transform] duration-100 hover:bg-white/[0.045] active:scale-[0.97]"
       title={tooltip}
     >
       <div className="relative">
         <div
           className={[
-            "bg-charcoal-500 relative h-15 w-15 overflow-hidden rounded-sm border transition-colors duration-150",
-            selected ? "border-gold-400" : "border-charcoal-50/30 group-hover:border-gold-400/70",
+            "bg-charcoal-500 relative h-15 w-15 overflow-hidden rounded-[9px] transition-all duration-150",
+            selected
+              ? "ring-gold-400 shadow-[0_0_0_1px_rgba(200,170,110,0.35),0_4px_12px_rgba(0,0,0,0.35)] ring-2"
+              : "ring-1 ring-white/[0.1] group-hover:ring-gold-400/60",
           ].join(" ")}
         >
           {/* The default skin's 380px tile: sharper than the 128px champion icon. */}
@@ -72,14 +74,15 @@ const ChampionTile = memo(function ChampionTile({
             lazy
             className="h-full w-full object-cover group-hover:scale-105"
           />
+          <div className="pointer-events-none absolute inset-0 rounded-[9px] ring-1 ring-white/[0.08] ring-inset" />
         </div>
         {owned > 0 && (
           <span
             className={[
-              "absolute -right-1.5 -bottom-1.5 min-w-4.5 rounded-full border px-1 text-center text-[9.5px] leading-4 font-semibold tabular-nums",
+              "border-charcoal-400 absolute -right-1.5 -bottom-1.5 min-w-[18px] rounded-full border-2 px-1 text-center text-[9.5px] leading-[15px] font-semibold tabular-nums shadow-sm",
               selected
-                ? "bg-gold-400 text-charcoal-600 border-charcoal-400"
-                : "bg-charcoal-200 text-ink-secondary border-charcoal-400",
+                ? "bg-gold-400 text-charcoal-600"
+                : "bg-charcoal-200 text-ink border-charcoal-400",
             ].join(" ")}
           >
             {owned}
@@ -88,8 +91,10 @@ const ChampionTile = memo(function ChampionTile({
       </div>
       <span
         className={[
-          "w-full truncate text-center text-[10.5px] leading-tight transition-colors select-none",
-          selected ? "text-gold-300" : "text-ink-muted group-hover:text-gold-300",
+          "w-full truncate text-center text-[11px] leading-tight transition-colors select-none",
+          selected
+            ? "text-gold-300 font-medium"
+            : "text-ink-secondary/85 group-hover:text-ink",
         ].join(" ")}
       >
         {name}
@@ -137,12 +142,12 @@ export default function ChampionGrid({
     <div className="flex h-full flex-col">
       <div
         data-tauri-drag-region
-        className="border-border flex shrink-0 items-center gap-3 border-b px-4 py-2.5"
+        className="border-border flex h-[52px] shrink-0 items-center gap-3 border-b px-4"
       >
-        <div className="relative w-48 shrink-0">
+        <div className="relative w-52 shrink-0">
           <Search
-            size={14}
-            strokeWidth={1.5}
+            size={13.5}
+            strokeWidth={1.75}
             className="text-ink-muted pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
           />
           <input
@@ -150,16 +155,17 @@ export default function ChampionGrid({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("grid.search")}
-            className="bg-charcoal-500 border-border text-ink placeholder:text-ink-muted focus:border-gold-500/60 w-full rounded-sm border py-1.5 pr-7 pl-8 text-sm transition-colors focus:outline-none"
+            className="mac-input text-ink placeholder:text-ink-muted h-8 w-full rounded-lg pr-7 pl-8 text-[13px] transition-all focus:outline-none"
             spellCheck={false}
             autoComplete="off"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="text-ink-muted hover:text-ink absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer"
+              className="text-ink-muted hover:text-ink absolute top-1/2 right-2 -translate-y-1/2 cursor-default rounded-full p-0.5 hover:bg-white/10"
+              aria-label="Clear search"
             >
-              <X size={13} strokeWidth={2} />
+              <X size={12} strokeWidth={2.2} />
             </button>
           )}
         </div>
@@ -175,7 +181,7 @@ export default function ChampionGrid({
 
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {champions.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(78px,1fr))] gap-1">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-1">
             {champions.map((champ) => {
               const name = championDisplayName(champ);
               const owned = ownedCounts.get(champ.name) ?? 0;

@@ -26,14 +26,14 @@ export default function SkinTypeChips({
 
   const chip = (active: boolean) =>
     [
-      "flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2 text-xs whitespace-nowrap transition-colors",
+      "flex h-7 shrink-0 cursor-default items-center gap-1.5 rounded-full border px-2.5 text-xs whitespace-nowrap transition-all duration-120",
       active
-        ? "border-gold-400/60 bg-gold-400/12 text-gold-200"
-        : "border-border text-ink-secondary hover:border-charcoal-50 hover:text-ink",
+        ? "border-gold-400/55 bg-gold-400/14 text-gold-200 font-medium shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+        : "border-white/[0.08] bg-white/[0.03] text-ink-secondary hover:border-white/[0.15] hover:bg-white/[0.07] hover:text-ink",
     ].join(" ");
 
   return (
-    <div className="flex min-w-0 items-center gap-1 overflow-x-auto select-none [scrollbar-width:none]">
+    <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto select-none [scrollbar-width:none]">
       <button onClick={() => onChange(null)} className={chip(value === null)}>
         {allLabel}
         {total !== undefined && <span className="text-ink-muted tabular-nums">{total}</span>}
@@ -46,6 +46,8 @@ export default function SkinTypeChips({
               ? t("rarity.legacy")
               : t(`rarity.${type}` as Key);
         const count = counts?.get(type);
+        const isRarity = type !== "forms" && type !== "legacy";
+        const color = isRarity ? rarityColor(type as Rarity) : undefined;
         return (
           <button
             key={type}
@@ -53,10 +55,11 @@ export default function SkinTypeChips({
             className={chip(value === type)}
             title={type === "forms" ? t("type.formsHint") : undefined}
             style={
-              value === type && type !== "forms" && type !== "legacy"
+              value === type && color
                 ? {
-                    borderColor: `${rarityColor(type as Rarity)}99`,
-                    color: rarityColor(type as Rarity),
+                    borderColor: `${color}88`,
+                    backgroundColor: `${color}1f`,
+                    color,
                   }
                 : undefined
             }

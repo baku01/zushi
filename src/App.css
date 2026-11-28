@@ -15,9 +15,9 @@
   --color-charcoal-100: #424248;
   --color-charcoal-200: #36363c;
   --color-charcoal-300: #2d2d32;
-  --color-charcoal-400: #1d1d20;
-  --color-charcoal-500: #262629;
-  --color-charcoal-600: #151517;
+  --color-charcoal-400: #1c1c1f;
+  --color-charcoal-500: #252529;
+  --color-charcoal-600: #141417;
 
   /* League client gold, the app's accent */
   --color-gold-100: #f0e6d2;
@@ -29,9 +29,9 @@
 
   --color-hextech: #0ac8b9;
 
-  --color-ink: #ececf0;
-  --color-ink-secondary: #a3a3ab;
-  --color-ink-muted: #6f6f78;
+  --color-ink: #f0f0f4;
+  --color-ink-secondary: #a5a5ae;
+  --color-ink-muted: #72727c;
 
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-accent: #c8aa6e;
@@ -43,8 +43,11 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   --font-logo: "JungleAdventurer", system-ui, sans-serif;
 
-  --animate-fade-in: fade-in 220ms ease-out both;
-  --animate-view-in: view-in 180ms ease-out both;
+  --animate-fade-in: fade-in 200ms ease-out both;
+  --animate-view-in: view-in 170ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-menu-in: menu-in 110ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-sheet-in: sheet-in 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-backdrop-in: fade-in 140ms ease-out both;
 }
 
 /* Opacity/transform only: these run on the compositor and never trigger a repaint. */
@@ -60,7 +63,29 @@
 @keyframes view-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
   }
   to {
     opacity: 1;
@@ -71,7 +96,7 @@
 /* Long lists: let WebKit skip layout and paint of rows that are off screen. */
 .cv-auto {
   content-visibility: auto;
-  contain-intrinsic-size: auto 120px;
+  contain-intrinsic-size: auto 136px;
 }
 
 html,
@@ -83,7 +108,7 @@ body,
   overflow: hidden;
   /* Transparent so the sidebar shows the window's vibrancy (see tauri.conf.json). */
   background-color: transparent;
-  color: #ececf0;
+  color: #f0f0f4;
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -95,16 +120,72 @@ body,
   user-select: none;
 }
 
-/* Gold primary button */
-.btn-gold {
-  background: linear-gradient(180deg, #e3cb93 0%, #c8aa6e 55%, #a98a4f 100%);
-  color: #10131b;
+/* Raised macOS dark surface with hairline specular top edge */
+.mac-surface {
+  background-color: rgba(38, 38, 43, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Recessed macOS search/input well */
+.mac-input {
+  background-color: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.32);
+}
+.mac-input:focus {
+  border-color: rgba(200, 170, 110, 0.55);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 2px rgba(0, 0, 0, 0.32),
+    0 0 0 2.5px rgba(200, 170, 110, 0.16);
+}
+
+/* Native macOS secondary bezel button */
+.mac-btn {
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  color: #ececf0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 1px rgba(0, 0, 0, 0.25);
+}
+.mac-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.mac-btn:active:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Native macOS destructive action button */
+.mac-btn-danger {
+  background: linear-gradient(180deg, #ff584d 0%, #e53930 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
     0 1px 2px rgba(0, 0, 0, 0.4);
 }
-.btn-gold:hover {
-  filter: brightness(1.08);
+.mac-btn-danger:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.mac-btn-danger:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+/* Gold primary button */
+.btn-gold {
+  background: linear-gradient(180deg, #e5ce98 0%, #c8aa6e 56%, #a9894c 100%);
+  color: #10131b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 1px 2px rgba(0, 0, 0, 0.42);
+}
+.btn-gold:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.btn-gold:active:not(:disabled) {
+  filter: brightness(0.96);
 }
 
 /* Keyboard focus ring, only for keyboard users. */
@@ -127,7 +208,8 @@ input:focus-visible {
 
 /* Thin scrollbar matching the dark theme */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -135,10 +217,14 @@ input:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.13);
+  border: 1.5px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.25);
+  border: 1.5px solid transparent;
+  background-clip: content-box;
 }
